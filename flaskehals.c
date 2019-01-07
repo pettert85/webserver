@@ -2,7 +2,7 @@
 #include <unistd.h> 
 #include <stdlib.h>
 #include <stdio.h>
-
+//hih
 #define LOKAL_PORT 55556
 #define BAK_LOGG 10 // Størrelse på for kø ventende forespørsler 
 
