@@ -2,7 +2,9 @@
 #include <unistd.h> 
 #include <stdlib.h>
 #include <stdio.h>
-//hih
+ #include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #define LOKAL_PORT 55556
 #define BAK_LOGG 10 // Størrelse på for kø ventende forespørsler 
 
@@ -10,7 +12,8 @@ int main ()
 {
 
   struct sockaddr_in  lok_adr;
-  int sd, ny_sd;
+  int sd, ny_sd,asis_fd,buf;
+  char buffer[BUFSIZ];
 
   // Setter opp socket-strukturen
   sd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -40,11 +43,28 @@ int main ()
 
       dup2(ny_sd, 1); // redirigerer socket til standard utgang
 
+      asis_fd = open("./response.asis",O_RDONLY);
+
+      
+         //dup2(asis_fd, 0); 
+
+      //dup2(asis_fd,0); // redirigerer åpen fil til standard inngang
+
+      while ((buf = read(asis_fd,buffer, BUFSIZ)) > 0 ){
+        write(1, buffer, buf);
+      } 
+
+
+
+
+      close(asis_fd);
+/*
+    
       printf("HTTP/1.1 200 OK\n");
       printf("Content-Type: text/plain\n");
       printf("\n");
       printf("Hallo klient!\n");
-
+*/
       // Sørger for å stenge socket for skriving og lesing
       // NB! Frigjør ingen plass i fildeskriptortabellen
       shutdown(ny_sd, SHUT_RDWR); 
