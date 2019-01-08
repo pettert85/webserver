@@ -81,7 +81,7 @@ int main ()
       else {
         //filen finnes og sendes  ut til klienten
         
-        sendResponse(ny_sd,"variabel");
+        sendResponse(ny_sd,"HTTP/1.1 200 OK\n");
       }
 
       
