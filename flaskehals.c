@@ -101,9 +101,11 @@ int main ()
       // Sørger for å stenge socket for skriving og lesing
       // NB! Frigjør ingen plass i fildeskriptortabellen
       shutdown(ny_sd, SHUT_RDWR);
-      printf("%s Connection closed. \n", inet_ntoa(client_addr.sin_addr));
+      printf("%s Connection to client closed. \n", inet_ntoa(client_addr.sin_addr));
       
       exit(0);
+
+
     }
 
     else {
