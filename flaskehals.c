@@ -102,6 +102,7 @@ int main ()
       // NB! Frigjør ingen plass i fildeskriptortabellen
       shutdown(ny_sd, SHUT_RDWR);
       printf("%s Connection closed. \n", inet_ntoa(client_addr.sin_addr));
+      
       exit(0);
     }
 
