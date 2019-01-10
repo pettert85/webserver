@@ -9,12 +9,28 @@
 #define PORT 8080
 #define BAK_LOGG 10 // Størrelse på for kø ventende forespørsler 
 
-int getFile(){
+int getFile(int client_sock){
 
- //lytte etter getFile
+  char client_request[6000];
+  ssize_t read_size;
 
- //søke i rotkatalog etter filnavn og returnere  innhold eller error
-  return -1; // <------------- satt til -1 for å teste logg
+  //Read clients request (GET)
+  read_size = recv(client_sock,client_request,6000,0);
+
+  //parse request and extract only the filename
+  /*
+  const char *filename = strchr(client_request, '/');
+  printf("%s",filename);
+  */
+
+  puts(client_request);
+
+  //send file back to client
+
+  //return correct value dependent on file exist or not
+
+  return -1; 
+
 }
 
 int sendResponse(int fd, char * fileContent){
@@ -22,18 +38,21 @@ int sendResponse(int fd, char * fileContent){
   //send innholdet tilbake til klienten
   int rv = send(fd,fileContent,strlen(fileContent),0);
 
-    if (rv < 0){
-          perror("send");
-        }
+  if (rv < 0){
+    perror("send");
+  }
   
   return rv;
 }
+
+
+//main
 
 int main ()
 {
 
   struct sockaddr_in  lok_adr, client_addr;
-  int sd, ny_sd;
+  int sd, client_sock;
   socklen_t addr_len = sizeof(struct sockaddr_in);
 
   // Setter opp socket-strukturen
@@ -58,7 +77,7 @@ int main ()
   while(1){ 
 
     // Aksepterer mottatt forespørsel
-    ny_sd = accept(sd, (struct sockaddr *)&client_addr, &addr_len);    
+    client_sock = accept(sd, (struct sockaddr *)&client_addr, &addr_len);    
 
     if(0==fork() ) {
 
@@ -66,10 +85,10 @@ int main ()
       printf("New connection from IP: %s \n", inet_ntoa(client_addr.sin_addr));
 
       //lytte etter forespørsel og se om den eksisterer
-      if (getFile() < 0 ){
+      if (getFile(client_sock) < 0 ){
         
         //fila finnes ikke,send error beskjed til stderr og til bruker
-        sendResponse(ny_sd,"HTTP/1.1 404 NOT FOUND\n");
+        sendResponse(client_sock,"HTTP/1.1 404 NOT FOUND\n");
         //error_fd = open("./error.log",O_WRONLY);
         FILE *f = fopen("error.log", "a+");
 
@@ -81,12 +100,12 @@ int main ()
       else {
         //filen finnes og sendes  ut til klienten
         
-        sendResponse(ny_sd,"HTTP/1.1 200 OK\n");
+        sendResponse(client_sock,"HTTP/1.1 200 OK\n");
       }
 
       
       /*
-      //dup2(ny_sd, 1); // redirigerer socket til standard utgang
+      //dup2(client_sock, 1); // redirigerer socket til standard utgang
 
       asis_fd = open("./response.asis",O_RDONLY);
       //leser inneholdet i .asis fila og sender til socket.
@@ -100,7 +119,7 @@ int main ()
 
       // Sørger for å stenge socket for skriving og lesing
       // NB! Frigjør ingen plass i fildeskriptortabellen
-      shutdown(ny_sd, SHUT_RDWR);
+      shutdown(client_sock, SHUT_RDWR);
       printf("%s Connection to client closed. \n", inet_ntoa(client_addr.sin_addr));
       
       exit(0);
@@ -110,7 +129,7 @@ int main ()
 
     else {
       //foreldreprosessen lukker fd og går tilbake å venter på connections.
-      close(ny_sd);
+      close(client_sock);
     }
   }
   return 0;
