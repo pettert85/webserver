@@ -1,3 +1,11 @@
+/*
+########################################################################
+#          A small simple webserver made in a school project           #
+#          by Benjamin Bråthen and Petter Thorsen                      #
+#                              :)                                      #
+########################################################################
+*/
+
 #include <arpa/inet.h>
 #include <unistd.h> 
 #include <stdlib.h>
@@ -9,34 +17,11 @@
 #define PORT 8080
 #define BAK_LOGG 10 // Størrelse på for kø ventende forespørsler 
 
-int getFile(int client_sock){
-
-  char client_request[6000];
-  ssize_t read_size;
-
-  //Read clients request (GET)
-  read_size = recv(client_sock,client_request,6000,0);
-
-  //parse request and extract only the filename
-  /*
-  const char *filename = strchr(client_request, '/');
-  printf("%s",filename);
-  */
-
-  puts(client_request);
-
-  //send file back to client
-
-  //return correct value dependent on file exist or not
-
-  return -1; 
-
-}
-
-int sendResponse(int fd, char * fileContent){
+int sendResponse(int client_sock, char *fileContent){
 
   //send innholdet tilbake til klienten
-  int rv = send(fd,fileContent,strlen(fileContent),0);
+  printf("sender innholdet tilbake...\n");
+  int rv = send(client_sock,fileContent,strlen(fileContent),0);
 
   if (rv < 0){
     perror("send");
@@ -44,6 +29,57 @@ int sendResponse(int fd, char * fileContent){
   
   return rv;
 }
+
+
+int receive(int client_sock){
+
+  char client_request[6000];
+  ssize_t read_size;
+
+  //Read clients request (GET)
+  read_size = recv(client_sock,client_request,6000,0);
+  char * file;
+ 
+  //parse request and extract only the filename
+  file = strtok(client_request,"GET /");
+  file = strtok(file," ");
+
+  //try opening requested file RONLY
+  FILE *filePointer = fopen(file, "r");
+
+  //Send file to client if it exists and could be opened
+
+/*
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  må lese fila til en char * før den sendes til metoden sendResponse
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  
+*/
+  if( filePointer > 0) {
+    int c;
+    char * string[10000];
+    while ((c = getc(filePointer)) != EOF)
+        //putchar(c);
+    printf("fil finnes\n");
+    //char * per = "HTTP/1.1 200 OK\n er";
+        
+    //sendResponse(client_sock, (char *)filePointer);
+
+    fclose(filePointer); //close file again
+    return 0;
+  }
+
+  //else the file does not exist send 404 error
+  else{
+    printf("fil finnes ikke\n");
+    //char * per = "HTTP/1.1 404 NOT FOUND\n";
+    sendResponse(client_sock,"HTTP/1.1 404 NOT FOUND\n");
+    fclose(filePointer);
+    return -1;
+  }
+}
+
+
 
 
 //main
@@ -85,10 +121,10 @@ int main ()
       printf("New connection from IP: %s \n", inet_ntoa(client_addr.sin_addr));
 
       //lytte etter forespørsel og se om den eksisterer
-      if (getFile(client_sock) < 0 ){
+      if (receive(client_sock) < 0 ){
         
         //fila finnes ikke,send error beskjed til stderr og til bruker
-        sendResponse(client_sock,"HTTP/1.1 404 NOT FOUND\n");
+        //sendResponse(client_sock,"HTTP/1.1 404 NOT FOUND\n");
         //error_fd = open("./error.log",O_WRONLY);
         FILE *f = fopen("error.log", "a+");
 
@@ -98,33 +134,13 @@ int main ()
       }
 
       else {
-        //filen finnes og sendes  ut til klienten
-        
-        sendResponse(client_sock,"HTTP/1.1 200 OK\n");
+
+        // Sørger for å stenge socket for skriving og lesing
+        // NB! Frigjør ingen plass i fildeskriptortabellen
+        shutdown(client_sock, SHUT_RDWR);
+        printf("%s Connection to client closed. \n", inet_ntoa(client_addr.sin_addr));
+        exit(0);
       }
-
-      
-      /*
-      //dup2(client_sock, 1); // redirigerer socket til standard utgang
-
-      asis_fd = open("./response.asis",O_RDONLY);
-      //leser inneholdet i .asis fila og sender til socket.
-      while ((buf = read(asis_fd,buffer, BUFSIZ)) > 0 ){
-        write(1, buffer, buf);
-      }
-        */
-
-      //lukker fila etter bruk
-      //close(asis_fd);
-
-      // Sørger for å stenge socket for skriving og lesing
-      // NB! Frigjør ingen plass i fildeskriptortabellen
-      shutdown(client_sock, SHUT_RDWR);
-      printf("%s Connection to client closed. \n", inet_ntoa(client_addr.sin_addr));
-      
-      exit(0);
-
-
     }
 
     else {
