@@ -20,7 +20,6 @@
 int sendResponse(int client_sock, char *fileContent){
 
   //send innholdet tilbake til klienten
-  printf("sender innholdet tilbake...\n");
   int rv = send(client_sock,fileContent,strlen(fileContent),0);
 
   if (rv < 0){
@@ -56,14 +55,11 @@ int receive(int client_sock){
   
 */
   if( filePointer > 0) {
-    int c;
-    char * string[10000];
-    while ((c = getc(filePointer)) != EOF)
-        //putchar(c);
-    printf("fil finnes\n");
-    //char * per = "HTTP/1.1 200 OK\n er";
-        
-    //sendResponse(client_sock, (char *)filePointer);
+    char buf[256];
+
+    while (fgets(buf, sizeof(buf), filePointer) != NULL){
+      sendResponse(client_sock,buf);
+    }        
 
     fclose(filePointer); //close file again
     return 0;
@@ -78,9 +74,6 @@ int receive(int client_sock){
     return -1;
   }
 }
-
-
-
 
 //main
 
@@ -118,7 +111,7 @@ int main ()
     if(0==fork() ) {
 
       //skriver ut klientens ip-adresse på stdout
-      printf("New connection from IP: %s \n", inet_ntoa(client_addr.sin_addr));
+      printf("New connection from IP: %s \n\n", inet_ntoa(client_addr.sin_addr));
 
       //lytte etter forespørsel og se om den eksisterer
       if (receive(client_sock) < 0 ){
