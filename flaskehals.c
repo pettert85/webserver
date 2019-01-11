@@ -1,3 +1,11 @@
+/*
+########################################################################
+#          A small simple webserver made in a school project           #
+#          by Benjamin Bråthen and Petter Thorsen                      #
+#                              :)                                      #
+########################################################################
+*/
+
 #include <arpa/inet.h>
 #include <unistd.h> 
 #include <stdlib.h>
@@ -9,31 +17,71 @@
 #define PORT 8080
 #define BAK_LOGG 10 // Størrelse på for kø ventende forespørsler 
 
-int getFile(){
-
- //lytte etter getFile
-
- //søke i rotkatalog etter filnavn og returnere  innhold eller error
-  return -1; // <------------- satt til -1 for å teste logg
-}
-
-int sendResponse(int fd, char * fileContent){
+int sendResponse(int client_sock, char *fileContent){
 
   //send innholdet tilbake til klienten
-  int rv = send(fd,fileContent,strlen(fileContent),0);
+  int rv = send(client_sock,fileContent,strlen(fileContent),0);
 
-    if (rv < 0){
-          perror("send");
-        }
+  if (rv < 0){
+    perror("send");
+  }
   
   return rv;
 }
+
+
+int receive(int client_sock){
+
+  char client_request[6000];
+  ssize_t read_size;
+
+  //Read clients request (GET)
+  read_size = recv(client_sock,client_request,6000,0);
+  char * file;
+ 
+  //parse request and extract only the filename
+  file = strtok(client_request,"GET /");
+  file = strtok(file," ");
+
+  //try opening requested file RONLY
+  FILE *filePointer = fopen(file, "r");
+
+  //Send file to client if it exists and could be opened
+
+/*
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  må lese fila til en char * før den sendes til metoden sendResponse
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  
+*/
+  if( filePointer > 0) {
+    char buf[256];
+
+    while (fgets(buf, sizeof(buf), filePointer) != NULL){
+      sendResponse(client_sock,buf);
+    }        
+
+    fclose(filePointer); //close file again
+    return 0;
+  }
+
+  //else the file does not exist send 404 error
+  else{
+    printf("fil finnes ikke\n");
+    //char * per = "HTTP/1.1 404 NOT FOUND\n";
+    sendResponse(client_sock,"HTTP/1.1 404 NOT FOUND\n");
+    fclose(filePointer);
+    return -1;
+  }
+}
+
+//main
 
 int main ()
 {
 
   struct sockaddr_in  lok_adr, client_addr;
-  int sd, ny_sd;
+  int sd, client_sock;
   socklen_t addr_len = sizeof(struct sockaddr_in);
 
   // Setter opp socket-strukturen
@@ -58,18 +106,18 @@ int main ()
   while(1){ 
 
     // Aksepterer mottatt forespørsel
-    ny_sd = accept(sd, (struct sockaddr *)&client_addr, &addr_len);    
+    client_sock = accept(sd, (struct sockaddr *)&client_addr, &addr_len);    
 
     if(0==fork() ) {
 
       //skriver ut klientens ip-adresse på stdout
-      printf("New connection from IP: %s \n", inet_ntoa(client_addr.sin_addr));
+      printf("New connection from IP: %s \n\n", inet_ntoa(client_addr.sin_addr));
 
       //lytte etter forespørsel og se om den eksisterer
-      if (getFile() < 0 ){
+      if (receive(client_sock) < 0 ){
         
         //fila finnes ikke,send error beskjed til stderr og til bruker
-        sendResponse(ny_sd,"HTTP/1.1 404 NOT FOUND\n");
+        //sendResponse(client_sock,"HTTP/1.1 404 NOT FOUND\n");
         //error_fd = open("./error.log",O_WRONLY);
         FILE *f = fopen("error.log", "a+");
 
@@ -79,36 +127,18 @@ int main ()
       }
 
       else {
-        //filen finnes og sendes  ut til klienten
-        
-        sendResponse(ny_sd,"HTTP/1.1 200 OK\n");
+
+        // Sørger for å stenge socket for skriving og lesing
+        // NB! Frigjør ingen plass i fildeskriptortabellen
+        shutdown(client_sock, SHUT_RDWR);
+        printf("%s Connection to client closed. \n", inet_ntoa(client_addr.sin_addr));
+        exit(0);
       }
-
-      
-      /*
-      //dup2(ny_sd, 1); // redirigerer socket til standard utgang
-
-      asis_fd = open("./response.asis",O_RDONLY);
-      //leser inneholdet i .asis fila og sender til socket.
-      while ((buf = read(asis_fd,buffer, BUFSIZ)) > 0 ){
-        write(1, buffer, buf);
-      }
-        */
-
-      //lukker fila etter bruk
-      //close(asis_fd);
-
-      // Sørger for å stenge socket for skriving og lesing
-      // NB! Frigjør ingen plass i fildeskriptortabellen
-      shutdown(ny_sd, SHUT_RDWR);
-      printf("%s Connection closed. \n", inet_ntoa(client_addr.sin_addr));
-      
-      exit(0);
     }
 
     else {
       //foreldreprosessen lukker fd og går tilbake å venter på connections.
-      close(ny_sd);
+      close(client_sock);
     }
   }
   return 0;
