@@ -1,6 +1,13 @@
 HTTP/1.1 200 OK
-Content-Type: text/plain
+Content-Type: text/html
 
-<body>
-Hei, her finner du mer info <a href="info.asis">info</a>!i
+<html>
+<head><title>WebSite</title></head>
+<body bgcolor="556B2F">
+<h1>Velkommen</h1>
+
+<p>Her finner du mer info <a href="html/info.asis">info</a></p>
+
+<img src="wallpaper.png">
 </body>
+</html>
