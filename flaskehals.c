@@ -56,14 +56,22 @@ int receive(int client_sock){
 
   //Read clients request (GET)
   read_size = recv(client_sock,client_request,6000,0);
-  char * file;
- 
-  //Parse request and extract only the filename
-  file = strtok(client_request,"GET /");
-  file = strtok(file," ");
+  char *file;
+  printf("%s\n",client_request ); 
 
-  //Try opening requested file RONLY
-  FILE *filePointer = fopen(file, "r");
+  /*
+  strtok splits the string "GET /html/info.asis HTTP/1.1" into separate words:
+  Get, /html/info.asis and HTTP/1.1 using escape character. 
+  The line " file = strtok (NULL, " "); " moves to the 2nd word. /html/info.asis
+  then we simply chop off the first char:
+  html/info.asis
+  */
+  
+  file = strtok (client_request," ");
+  file = strtok (NULL, " "); //show 2nd word
+  char* chopped_file = file + 1; //remove first char /
+
+  FILE *filePointer = fopen(chopped_file, "r");
 
   //Send file to client if it exists and could be opened
   if( filePointer != NULL) {
