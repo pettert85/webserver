@@ -14,19 +14,37 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <string.h>
+#include <time.h>
 #define PORT 8080
 #define BAK_LOGG 10 // Størrelse på for kø ventende forespørsler 
 
+//Global variables
+struct sockaddr_in lok_adr, client_addr;
+int sd, client_sock;
+socklen_t addr_len = sizeof(struct sockaddr_in);
+
+int fd;
+
+int errorLog(){
+
+      //log errors to log file
+      fprintf(stderr, "Client adress: %s: ",inet_ntoa(client_addr.sin_addr));
+      perror("ERROR: ");
+     
+      return 0;
+}
+
 int sendResponse(int client_sock, char *fileContent){
 
+//!!!!!!!!!!!!!!!!!!!HUSK OG ENDRE STATEMENT!!!!!!!!!!
   //send innholdet tilbake til klienten
-  int rv = send(client_sock,fileContent,strlen(fileContent),0);
-
-  if (rv < 0){
-    perror("send");
+  if (send(client_sock,fileContent,strlen(fileContent),0) == -1 ){
+        errorLog();
+        
+        return -1;
   }
   
-  return rv;
+  else {return 0;}
 }
 
 
@@ -47,28 +65,20 @@ int receive(int client_sock){
   FILE *filePointer = fopen(file, "r");
 
   //Send file to client if it exists and could be opened
+  if( filePointer != NULL) {
+    char buf[1000];
+    int responseOK = 0;
+    //sends file line by line back to client
+    while (fgets(buf, sizeof(buf), filePointer) != NULL && responseOK >= 0){
+       responseOK = sendResponse(client_sock,buf);
+    }      
 
-/*
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  må lese fila til en char * før den sendes til metoden sendResponse
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  
-*/
-  if( filePointer > 0) {
-    char buf[256];
-
-    while (fgets(buf, sizeof(buf), filePointer) != NULL){
-      sendResponse(client_sock,buf);
-    }        
-
-    fclose(filePointer); //close file again
-    return 0;
+      fclose(filePointer); //close file again
+      return 0;
   }
 
   //else the file does not exist send 404 error
   else{
-    printf("fil finnes ikke\n");
-    //char * per = "HTTP/1.1 404 NOT FOUND\n";
     sendResponse(client_sock,"HTTP/1.1 404 NOT FOUND\n");
     fclose(filePointer);
     return -1;
@@ -77,13 +87,13 @@ int receive(int client_sock){
 
 //main
 
-int main ()
-{
-
-  struct sockaddr_in  lok_adr, client_addr;
-  int sd, client_sock;
-  socklen_t addr_len = sizeof(struct sockaddr_in);
-
+int main () {
+    
+  //STDERR points to  log file
+  char per[] = "error.log";
+  fd = open(per,O_APPEND | O_CREAT | O_WRONLY,00660);
+  dup2(fd,2);
+      
   // Setter opp socket-strukturen
   sd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 
@@ -97,7 +107,7 @@ int main ()
 
   // Kobler sammen socket og lokal adresse
   if ( 0==bind(sd, (struct sockaddr *)&lok_adr, sizeof(lok_adr)) )
-    printf("Webserver har pid: %d og er knyttet til port %d.\n", getpid(), PORT);
+    fprintf(stderr,"Webserver has pid: %d and is using port %d.\n\n", getpid(), PORT);
   else
     exit(1);
 
@@ -110,30 +120,22 @@ int main ()
 
     if(0==fork() ) {
 
-      //skriver ut klientens ip-adresse på stdout
-      printf("New connection from IP: %s \n\n", inet_ntoa(client_addr.sin_addr));
+      //change STDIN and STDOUT to client
 
-      //lytte etter forespørsel og se om den eksisterer
-      if (receive(client_sock) < 0 ){
-        
-        //fila finnes ikke,send error beskjed til stderr og til bruker
-        //sendResponse(client_sock,"HTTP/1.1 404 NOT FOUND\n");
-        //error_fd = open("./error.log",O_WRONLY);
-        FILE *f = fopen("error.log", "a+");
 
-        //skriver til log fila !!Mangler hendelse (perror)!!
-        fprintf(f,"IP adresse: %s : hendelse:  \n", inet_ntoa(client_addr.sin_addr));
-        fclose(f);
-      }
+      //log client requests
+      fprintf(stderr,"New request from %s. \n", inet_ntoa(client_addr.sin_addr));
 
-      else {
+      //receive request from client.
+      receive(client_sock);
 
-        // Sørger for å stenge socket for skriving og lesing
-        // NB! Frigjør ingen plass i fildeskriptortabellen
-        shutdown(client_sock, SHUT_RDWR);
-        printf("%s Connection to client closed. \n", inet_ntoa(client_addr.sin_addr));
-        exit(0);
-      }
+      // close socket and free fd space
+      shutdown(client_sock, SHUT_RDWR);
+
+      //log closed connections
+      fprintf(stderr,"Connection to %s closed. \n\n", inet_ntoa(client_addr.sin_addr));
+      exit(0);
+      
     }
 
     else {
@@ -141,5 +143,7 @@ int main ()
       close(client_sock);
     }
   }
+
+  close(fd);
   return 0;
 }
