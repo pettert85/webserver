@@ -81,8 +81,11 @@ int receive(int client_sock){
    
     if(strcmp(fileExtension,"asis") != 0){
       //Send correct header first -  Must use variables here to change mime type and http 200 ok to other values.
-      char * tei = "HTTP/1.1 200 OK\r\n Content-Type: image/png\r\n Content-Transfer-Encoding: binary\n\r\n";
-      send(client_sock,tei,strlen(tei),0); //sends the header first header
+      char * mimetype="text/html"; // needs to be changed by lookup in /etc/mimetypes
+      char * conttype="Content-Transfer-Encoding: binary"; // must only be used for binary files eg images
+      char header[200];
+      sprintf(header,"HTTP/1.1 200 OK\r\n Content-Type: %s\r\n %s\n\r\n",mimetype,conttype);
+      send(client_sock,header,strlen(header),0); //sends the header first header
     }
 
     //send file
