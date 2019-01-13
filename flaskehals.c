@@ -56,7 +56,7 @@ int receive(int client_sock){
   read_size = recv(client_sock,client_request,6000,0);
   char *file;
   char *fileExtension;
-  
+
   /*
   strtok splits the string "GET /html/info.asis HTTP/1.1" into separate words:
   Get, /html/info.asis and HTTP/1.1 using escape character. 
@@ -79,17 +79,13 @@ int receive(int client_sock){
   //Send file to client if it exists and could be opened
   if( filePointer != NULL) {
    
-    if(strcmp(fileExtension,"asis") == 0){
-      //send file
-    
-    }
-
-    else{
+    if(strcmp(fileExtension,"asis") != 0){
       //Send correct header first -  Must use variables here to change mime type and http 200 ok to other values.
       char * tei = "HTTP/1.1 200 OK\r\n Content-Type: image/png\r\n Content-Transfer-Encoding: binary\n\r\n";
       send(client_sock,tei,strlen(tei),0); //sends the header first header
     }
 
+    //send file
     char *sendbuf; //buffer
     fseek (filePointer, 0, SEEK_END); //seeks the end of the file
     int fileLength = ftell(filePointer); //total length og the file
