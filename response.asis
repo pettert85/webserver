@@ -4,10 +4,12 @@ Content-Type: text/html
 <html>
 <head><title>WebSite</title></head>
 <body bgcolor="556B2F">
-<h1>Velkommen</h1>
+<center>
+<h1>Welcome to our website!</h1>
 
-<p>Her finner du mer info <a href="html/info.asis">info</a></p>
+<p>click <a href="html/info.asis">here</a> for more information in plain text</p>
 
-<img src="wallpaper.png">
+<img src="tux.png">
+</center>
 </body>
 </html>

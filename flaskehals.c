@@ -55,7 +55,8 @@ int receive(int client_sock){
   //Read clients request (GET)
   read_size = recv(client_sock,client_request,6000,0);
   char *file;
-
+  char *fileExtension;
+  
   /*
   strtok splits the string "GET /html/info.asis HTTP/1.1" into separate words:
   Get, /html/info.asis and HTTP/1.1 using escape character. 
@@ -68,20 +69,49 @@ int receive(int client_sock){
   file = strtok (NULL, " "); //show 2nd word
   file = file + 1; //remove first char /
 
-  FILE *filePointer = fopen(file, "r");
+  //try to opening the requested file
+  FILE *filePointer = fopen(file, "rb");
+
+  //split the string some more to find correct file extension
+  fileExtension = strtok(file,".");
+  fileExtension = strtok(NULL,".");
 
   //Send file to client if it exists and could be opened
   if( filePointer != NULL) {
-    char buf[1000];
-    int responseOK = 0;
    
-    //char * tei = "HTTP/1.1 200 OK\r\n Content-Type: image/jpg\r\n Content-Length: 353486\r\n\r\n";
-    //send(client_sock,tei,strlen(tei),0);
+    if(strcmp(fileExtension,"asis") == 0){
+      //send file
+    
+    }
+
+    else{
+      //Send correct header first -  Must use variables here to change mime type and http 200 ok to other values.
+      char * tei = "HTTP/1.1 200 OK\r\n Content-Type: image/png\r\n Content-Transfer-Encoding: binary\n\r\n";
+      send(client_sock,tei,strlen(tei),0); //sends the header first header
+    }
+
+    char *sendbuf; //buffer
+    fseek (filePointer, 0, SEEK_END); //seeks the end of the file
+    int fileLength = ftell(filePointer); //total length og the file
+    rewind(filePointer); //sets the pointer to start of the file again
+
+    sendbuf = (char*) malloc (sizeof(char)*fileLength); 
+   
+    size_t result = fread(sendbuf, 1, fileLength, filePointer); //reads the whole file and stores length in result
+    send(client_sock, sendbuf, result, 0); //sends the file     
+    
+    //-----------------------------------------------------------
 
     //Sends file line by line back to client
+    /*
+    
+    char buf[1000];
+    int responseOK = 0;
+
     while (fgets(buf, sizeof(buf), filePointer) != NULL && responseOK >= 0){
        responseOK = sendResponse(client_sock,buf);
-    }      
+    } 
+    */     
 
       fclose(filePointer); //Close file again
       return 0;
