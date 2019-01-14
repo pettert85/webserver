@@ -8,12 +8,10 @@ sudo useradd -r -s /bin/nologin apache
 chmod +S --> for sudo. needs root to bind port 80.
 Drops the privileges again after bind
 
-Must change GID,UID --> needs to be dynamically loaded 
-sudo ./flaskehals
-
 ####DOCKER commands#####
 docker build -t USERNAME/webserver .
-docker run -p 80:80 --name web -it USERNAME/webserver /bin/sh --privileged
+docker run -p 80:80 --name web USERNAME/webserver
+docker run -p 80:80 --name web -it USERNAME/webserver /bin/sh 
 */
 
 #include <arpa/inet.h>
@@ -36,7 +34,7 @@ docker run -p 80:80 --name web -it USERNAME/webserver /bin/sh --privileged
 struct sockaddr_in lok_adr, client_addr;
 int sd, client_sock, fd;
 socklen_t addr_len = sizeof(struct sockaddr_in);
-
+const char * path = "/var/www/";
 
 int errorLog(){
 
@@ -129,8 +127,7 @@ int receive(int client_sock){
       return 0;
   }
 
-  
-  else{ //The file does not exist send 404 back to client
+    { //The var/wwwe does not exist send 404 back to client
     sendResponse(client_sock,"HTTP/1.1 404 NOT FOUND\n");
     fclose(filePointer);
     return -1;
@@ -143,6 +140,8 @@ int main () {
 
   //START Demonizing
   if (fork() == 0){
+      
+      chdir("/var/www"); //chroot to /var/www
 
   setsid(); //not attached to the terminal
 
@@ -158,6 +157,7 @@ int main () {
     
   //END Demonizing
 
+
   //STDERR points to log file
   char per[] = "/var/www/log/flaskehals.log";
   fd = open(per,O_APPEND | O_CREAT | O_WRONLY,00660);
@@ -166,7 +166,7 @@ int main () {
   //Setter opp socket-strukturen
   sd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 
-  //For at operativsystemet ikke skal holdte porten reservert etter tjenerens død
+  //Prevent system from holding on to a port after termination.
   setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, &(int){ 1 }, sizeof(int));
 
   //Initiate local address
