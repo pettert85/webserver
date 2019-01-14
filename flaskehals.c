@@ -231,11 +231,17 @@ int main () {
   close(fd);
   return 0;
   } 
-    else{exit(0);}
+    else{
+      exit(0);
+    }
+
   }
 
   //demonizing
-  else{exit(0);}
+  else{
+    //raise(SIGSTOP);
+    exit(0);
+  }
 
 
 } //main
