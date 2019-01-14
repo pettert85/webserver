@@ -2,6 +2,8 @@
 
 FROM alpine:3.5
 
+RUN adduser -D -u 964 -g apache apache
+
 COPY flaskehals /bin/
 
 ADD html /var/www/html
