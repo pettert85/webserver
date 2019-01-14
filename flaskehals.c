@@ -10,6 +10,10 @@ Drops the privileges again after bind
 
 Must change GID,UID --> needs to be dynamically loaded 
 sudo ./flaskehals
+
+####DOCKER commands#####
+docker build -t USERNAME/webserver .
+docker run -p 80:80 --name web -it USERNAME/webserver /bin/sh --privileged
 */
 
 #include <arpa/inet.h>
@@ -21,7 +25,7 @@ sudo ./flaskehals
 #include <fcntl.h>
 #include <string.h>
 #include <time.h>
-#include<sys/wait.h> 
+#include <sys/wait.h> 
 #include <signal.h>
 #include <errno.h>
 
@@ -155,7 +159,7 @@ int main () {
   //END Demonizing
 
   //STDERR points to log file
-  char per[] = "error.log";
+  char per[] = "/var/log/flaskehals.log";
   fd = open(per,O_APPEND | O_CREAT | O_WRONLY,00660);
   dup2(fd,2);
       
@@ -239,8 +243,8 @@ int main () {
 
   //demonizing
   else{
-    //raise(SIGSTOP);
-    exit(0);
+    raise(SIGSTOP);
+    //exit(0);
   }
 
 
