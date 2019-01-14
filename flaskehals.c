@@ -159,7 +159,7 @@ int main () {
   //END Demonizing
 
   //STDERR points to log file
-  char per[] = "/var/log/flaskehals.log";
+  char per[] = "/var/www/log/flaskehals.log";
   fd = open(per,O_APPEND | O_CREAT | O_WRONLY,00660);
   dup2(fd,2);
       
