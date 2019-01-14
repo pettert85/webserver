@@ -2,7 +2,7 @@
 
 FROM alpine:3.5
 
-COPY flaskehals /var/www/
+COPY flaskehals /bin/
 
 ADD html /var/www/html
 
@@ -12,4 +12,6 @@ COPY tux.png /var/www/
 
 EXPOSE 80
 
-CMD ["/usr/bin/flaskehals"]
+CMD /bin/flaskehals
+
+
