@@ -127,6 +127,8 @@ int receive(int client_sock){
 //main
 
 int main () {
+
+  if (fork() == 0){
     
   //STDERR points to log file
   char per[] = "error.log";
@@ -190,4 +192,6 @@ int main () {
 
   close(fd);
   return 0;
+  }
+  else{exit(0);}
 }
