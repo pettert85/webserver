@@ -4,6 +4,12 @@
 #          by Benjamin Bråthen and Petter Thorsen                      #
 #                              :)                                      #
 ########################################################################
+sudo useradd -r -s /bin/nologin apache
+chmod +S --> for sudo. needs root to bind port 80.
+Drops the privileges again after bind
+
+Must change GID,UID --> needs to be dynamically loaded 
+sudo ./flaskehals
 */
 
 #include <arpa/inet.h>
@@ -16,7 +22,10 @@
 #include <string.h>
 #include <time.h>
 #include<sys/wait.h> 
-#define PORT 8080
+#include <signal.h>
+#include <errno.h>
+
+#define PORT 80
 #define BAK_LOGG 10 // Max number of waiting connections
 
 //Global variables
@@ -128,8 +137,23 @@ int receive(int client_sock){
 
 int main () {
 
+  //START Demonizing
   if (fork() == 0){
+
+  setsid(); //not attached to the terminal
+
+  signal(SIGTTOU,SIG_IGN);
+  signal(SIGTTIN,SIG_IGN);
+  signal(SIGTSTP,SIG_IGN);
+
+  for(fd=0; fd < sysconf(_SC_OPEN_MAX); fd++){
+    close(fd);
+  }
+
+  if(fork() == 0){
     
+  //END Demonizing
+
   //STDERR points to log file
   char per[] = "error.log";
   fd = open(per,O_APPEND | O_CREAT | O_WRONLY,00660);
@@ -154,6 +178,20 @@ int main () {
     errorLog();
     exit(1); 
   }
+
+  /*
+  Drop our Root privileges after bind to port 80
+  */
+
+  if (getuid() == 0) {
+    /* process is running as root, drop privileges */
+    if (setgid(964) != 0);
+       // fatal("setgid: Unable to drop group privileges: %s", strerror(errno));
+    if (setuid(964) != 0);
+       // fatal("setuid: Unable to drop user privileges: %S", strerror(errno));
+  
+}
+
 
   //Waiting for incoming connection
   listen(sd, BAK_LOGG);
@@ -192,6 +230,12 @@ int main () {
 
   close(fd);
   return 0;
+  } 
+    else{exit(0);}
   }
+
+  //demonizing
   else{exit(0);}
-}
+
+
+} //main
