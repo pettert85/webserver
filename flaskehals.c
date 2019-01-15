@@ -17,8 +17,13 @@ docker volume create www
 docker run -p 80:80 --name web -v www:/var/www USERNAME/webserver
 put filer i /var/lib/docker/volumes/www/_data/
 
-Good reading about my_init:
+###########Good reading about my_init:###########
 https://blog.phusion.nl/2015/01/20/docker-and-the-pid-1-zombie-reaping-problem/
+
+##########CGROUPS - limit CPU usage of docker.####################
+docker run -p 80:80 --name web -v www:/var/www --cpus 0.1  petterth/webserver (0.1 = 10 %)
+docker stats -> viser bruken
+
 */
 
 #include <arpa/inet.h>
