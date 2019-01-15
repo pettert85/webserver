@@ -1,19 +1,25 @@
 #Our build
 
-FROM alpine:3.5
+#FROM alpine:3.5
 
-RUN adduser -D -u 964 -g apache apache
+FROM scratch
 
-COPY flaskehals /bin/
+#ADD rootfs.tar.xz /
 
-ADD html /var/www/html
+#RUN adduser -D -u 964 -g  apache apache
 
-COPY response.asis /var/www/
+COPY flaskehals /bin/flaskehals
 
-COPY tux.png /var/www/
+#ADD html /var/www/html
 
+#COPY response.asis /var/www/
+
+#COPY tux.png /var/www/
+#WORKDIR /bin
+
+#COPY --from=builder /etc/passwd /etc/passwd
 EXPOSE 80
 
-CMD /bin/flaskehals
-
+CMD ["/bin/flaskehals"]
+ENTRYPOINT ["/bin/flaskehals"]
 

@@ -6,12 +6,16 @@
 ########################################################################
 sudo useradd -r -s /bin/nologin apache
 chmod +S --> for sudo. needs root to bind port 80.
-Drops the privileges again after bind
 
 ####DOCKER commands#####
 docker build -t USERNAME/webserver .
 docker run -p 80:80 --name web USERNAME/webserver
 docker run -p 80:80 --name web -it USERNAME/webserver /bin/sh 
+
+for volumes:
+docker volume create www
+docker run -p 80:80 --name web -v www:/var/www USERNAME/webserver
+put filer i /var/lib/docker/volumes/www/_data/
 */
 
 #include <arpa/inet.h>
@@ -141,60 +145,56 @@ int main () {
   //START Demonizing
   if (fork() == 0){
       
-      chdir("/var/www"); //chroot to /var/www
-      chroot("/var/www");
+    chdir("/var/www");  //First change work drectory
+    chroot("/var/www"); //then chroot
 
-  setsid(); //not attached to the terminal
+    setsid(); //not attached to the terminal
 
-  signal(SIGTTOU,SIG_IGN);
-  signal(SIGTTIN,SIG_IGN);
-  signal(SIGTSTP,SIG_IGN);
+    signal(SIGTTOU,SIG_IGN);
+    signal(SIGTTIN,SIG_IGN);
+    signal(SIGTSTP,SIG_IGN);
 
-  for(fd=0; fd < sysconf(_SC_OPEN_MAX); fd++){
-    close(fd);
+    for(fd=0; fd < sysconf(_SC_OPEN_MAX); fd++){
+      close(fd);
   }
 
-  if(fork() == 0){
-    
-  //END Demonizing
+  if(fork() == 0){ //END Demonizing
 
 
-  //STDERR points to log file
-  char per[] = "/var/www/log/flaskehals.log";
-  fd = open(per,O_APPEND | O_CREAT | O_WRONLY,00660);
-  dup2(fd,2);
-      
-  //Setter opp socket-strukturen
-  sd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    //STDERR points to log file
+    char per[] = "/var/www/log/flaskehals.log";
+    fd = open(per,O_APPEND | O_CREAT | O_WRONLY,00660);
+    dup2(fd,2);
+        
+    //Setter opp socket-strukturen
+    sd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 
-  //Prevent system from holding on to a port after termination.
-  setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, &(int){ 1 }, sizeof(int));
+    //Prevent system from holding on to a port after termination.
+    setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, &(int){ 1 }, sizeof(int));
 
-  //Initiate local address
-  lok_adr.sin_family      = AF_INET;
-  lok_adr.sin_port        = htons((u_short)PORT); 
-  lok_adr.sin_addr.s_addr = htonl(INADDR_ANY);
+    //Initiate local address
+    lok_adr.sin_family      = AF_INET;
+    lok_adr.sin_port        = htons((u_short)PORT); 
+    lok_adr.sin_addr.s_addr = htonl(INADDR_ANY);
 
-  //Binds socket and local address
-  if ( 0==bind(sd, (struct sockaddr *)&lok_adr, sizeof(lok_adr)) )
-    fprintf(stderr,"Webserver has pid: %d and is using port %d.\n\n", getpid(), PORT);
+    //Binds socket and local address
+    if ( 0==bind(sd, (struct sockaddr *)&lok_adr, sizeof(lok_adr)) )
+      fprintf(stderr,"Webserver has pid: %d and is using port %d.\n\n", getpid(), PORT);
 
-  else { //something went wrong
-    errorLog();
-    exit(1); 
-  }
+    else { //something went wrong
+      errorLog();
+      exit(1); 
+    }
 
-  /*
-  Drop our Root privileges after bind to port 80
-  */
+    /*
+    Drop our Root privileges after bind to port 80
+    */
 
-  if (getuid() == 0) {
-    /* process is running as root, drop privileges */
+    if (getuid() == 0) { // process is running as root, drop privileges
     if (setgid(964) != 0);
-       // fatal("setgid: Unable to drop group privileges: %s", strerror(errno));
+    // fatal("setgid: Unable to drop group privileges: %s", strerror(errno));
     if (setuid(964) != 0);
-       // fatal("setuid: Unable to drop user privileges: %S", strerror(errno));
-  
+    // fatal("setuid: Unable to drop user privileges: %S", strerror(errno));
 }
 
 
