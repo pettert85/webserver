@@ -142,6 +142,7 @@ int main () {
   if (fork() == 0){
       
       chdir("/var/www"); //chroot to /var/www
+      chroot("/var/www");
 
   setsid(); //not attached to the terminal
 
