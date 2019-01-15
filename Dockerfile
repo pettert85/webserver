@@ -20,6 +20,7 @@ COPY flaskehals /bin/flaskehals
 #COPY --from=builder /etc/passwd /etc/passwd
 EXPOSE 80
 
-CMD ["/bin/flaskehals"]
+
+#CMD ["/bin/flaskehals"]
 ENTRYPOINT ["/bin/flaskehals"]
 

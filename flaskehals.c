@@ -7,15 +7,18 @@
 sudo useradd -r -s /bin/nologin apache
 chmod +S --> for sudo. needs root to bind port 80.
 
-####DOCKER commands#####
+#### BASIC DOCKER commands#####
 docker build -t USERNAME/webserver .
 docker run -p 80:80 --name web USERNAME/webserver
 docker run -p 80:80 --name web -it USERNAME/webserver /bin/sh 
 
-for volumes:
+##### mount volumes#########
 docker volume create www
 docker run -p 80:80 --name web -v www:/var/www USERNAME/webserver
 put filer i /var/lib/docker/volumes/www/_data/
+
+Good reading about my_init:
+https://blog.phusion.nl/2015/01/20/docker-and-the-pid-1-zombie-reaping-problem/
 */
 
 #include <arpa/inet.h>
@@ -246,6 +249,8 @@ int main () {
   else{
     raise(SIGSTOP);
     //exit(0);
+
+    while(1);  //Parent must not die in docker --> my_init needeed.
   }
 
 
