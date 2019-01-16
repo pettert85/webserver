@@ -20,6 +20,7 @@ put files in /var/lib/docker/volumes/www/_data/
 ########### Good reading about my_init ###########
 https://blog.phusion.nl/2015/01/20/docker-and-the-pid-1-zombie-reaping-problem/
 
+HEAD
 ########## CGROUPS - limit CPU usage of docker ####################
 docker run -p 80:80 --name web -v www:/var/www --cpus 0.1  petterth/webserver (0.1 = 10 %)
 docker stats -> shows
@@ -49,6 +50,11 @@ and also add:
 Note: To use the dockremap user and have Docker create it for you, set the value to default rather than testuser.
 
 For more detailed information see https://docs.docker.com/engine/security/userns-remap/
+
+##########CGROUPS - limit CPU usage of docker.####################
+docker run -p 80:80 --name web -v www:/var/www --cpus 0.1  USERNAME/webserver (0.1 = 10 %)
+docker stats -> viser bruken
+a4c566f337b95d4db43855bf58214286c20b3693
 
 */
 
@@ -129,7 +135,10 @@ int receive(int client_sock){
   if( filePointer != NULL) {
    
     if(strcmp(fileExtension,"asis") != 0){
-      //Send correct header first -  Must use variables here to change mime type and http 200 ok to other values.
+      //Send correct header first
+
+      //  fopen()
+
       char * mimetype="text/html"; // needs to be changed by lookup in /etc/mimetypes
       char * conttype="Content-Transfer-Encoding: binary"; // must only be used for binary files eg images
       char header[200];
@@ -196,8 +205,9 @@ int main () {
 
 
     //STDERR points to log file
-    char per[] = "/var/www/log/flaskehals.log";
-    fd = open(per,O_APPEND | O_CREAT | O_WRONLY,00660);
+    mkdir("log/", 00770); // create log directory if it does not exist
+    char per[] = "log/webserver.log"; //relative to chroot directory
+    fd = open(per,O_APPEND | O_CREAT | O_WRONLY,00666);
     dup2(fd,2);
         
     //Setter opp socket-strukturen
