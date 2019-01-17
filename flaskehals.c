@@ -134,15 +134,43 @@ int receive(int client_sock){
   //Send file to client if it exists and could be opened
   if( filePointer != NULL) {
    
-    if(strcmp(fileExtension,"asis") != 0){
-      //Send correct header first
+    if(strcmp(fileExtension,"asis") != 0){  //get header from mime.types
 
-      //  fopen()
+      char * line = NULL;
+      size_t len = 0;
+      ssize_t read;
+      char *token;
+      char *match;
+      FILE *mimeFilePointer; 
+      char delim[] = "\t\n"; //FML so very very much
+      char yeah[400];
+      char * mimetype;
+      mimeFilePointer = fopen("mime.types","r"); 
+      
+      while ((read = getline(&line, &len, mimeFilePointer)) != -1) { //read mime.types line by line
+        strcpy(yeah,line);
+        token = strtok(yeah,delim); //split each line into tokens
 
-      char * mimetype="text/html"; // needs to be changed by lookup in /etc/mimetypes
-      char * conttype="Content-Transfer-Encoding: binary"; // must only be used for binary files eg images
+        while ( token != NULL ) { 
+          if((strcmp(token,fileExtension) ) == 0 ){ //we have match
+            //fprintf(stderr, "match: %s and %s - header is: %s\n",token,fileExtension,match );
+            mimetype=match;
+            break;
+          }
+
+          else{ //no match, keep going
+          match = strdup(token); //keep previous token for header            
+          token = strtok(NULL,delim); //point to next element
+          }
+        }
+      }
+      free(line);
+      fclose(mimeFilePointer); //close mime.types file
+
+       // needs to be changed by lookup in /etc/mimetypes
+      //char * conttype="Content-Transfer-Encoding: binary"; // must only be used for binary files eg images
       char header[200];
-      sprintf(header,"HTTP/1.1 200 OK\r\n Content-Type: %s\r\n %s\n\r\n",mimetype,conttype);
+      sprintf(header,"HTTP/1.1 200 OK\r\n %s\n\r\n",mimetype);
       send(client_sock,header,strlen(header),0); //sends the header first header
     }
 
@@ -204,11 +232,11 @@ int main () {
   if(fork() == 0){ //END Demonizing
 
 
-    //STDERR points to log file
+ 
     mkdir("log/", 00770); // create log directory if it does not exist
     char per[] = "log/webserver.log"; //relative to chroot directory
     fd = open(per,O_APPEND | O_CREAT | O_WRONLY,00666);
-    dup2(fd,2);
+    dup2(fd,2); //STDERR points to log file
         
     //Setter opp socket-strukturen
     sd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
