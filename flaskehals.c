@@ -89,19 +89,6 @@ int errorLog(){
       return 0;
 }
 
-int sendResponse(int client_sock, char *fileContent){
-
-  //Sends data from *fileContent back through client_sock
-  if (send(client_sock,fileContent,strlen(fileContent),0) == -1 ){
-        errorLog();
-        
-        return -1; 
-  }
-  
-  else {return 0;}
-}
-
-
 int receive(int client_sock){
 
   char client_request[6000];
@@ -131,10 +118,10 @@ int receive(int client_sock){
   fileExtension = strtok(file,".");
   fileExtension = strtok(NULL,".");
 
-  //Send file to client if it exists and could be opened
-  if( filePointer != NULL) {
+
+  if( filePointer != NULL) {   //if file exists and can be opened, send it!
    
-    if(strcmp(fileExtension,"asis") != 0){  //get header from mime.types
+    if(strcmp(fileExtension,"asis") != 0){  //get header from mime.types file
 
       char * line = NULL;
       size_t len = 0;
@@ -167,14 +154,13 @@ int receive(int client_sock){
       free(line);
       fclose(mimeFilePointer); //close mime.types file
 
-       // needs to be changed by lookup in /etc/mimetypes
       //char * conttype="Content-Transfer-Encoding: binary"; // must only be used for binary files eg images
       char header[200];
       sprintf(header,"HTTP/1.1 200 OK\r\n %s\n\r\n",mimetype);
       send(client_sock,header,strlen(header),0); //sends the header first header
     }
 
-    //send file
+    //send the file
     char *sendbuf; //buffer
     fseek (filePointer, 0, SEEK_END); //seeks the end of the file
     int fileLength = ftell(filePointer); //total length og the file
@@ -184,30 +170,40 @@ int receive(int client_sock){
    
     size_t result = fread(sendbuf, 1, fileLength, filePointer); //reads the whole file and stores length in result
     send(client_sock, sendbuf, result, 0); //sends the file     
-    
-    //-----------------------------------------------------------
-
-    //Sends file line by line back to client
-    /*
-    
-    char buf[1000];
-    int responseOK = 0;
-
-    while (fgets(buf, sizeof(buf), filePointer) != NULL && responseOK >= 0){
-       responseOK = sendResponse(client_sock,buf);
-    } 
-    */     
-
-      fclose(filePointer); //Close file again
-      return 0;
+    fclose(filePointer); //Close file again
+    return 0;
   }
 
-    { //The var/wwwe does not exist send 404 back to client
-    sendResponse(client_sock,"HTTP/1.1 404 NOT FOUND\n");
-    fclose(filePointer);
+  else {  //page not found, send 404 error back to client 
+
+    char header[200];
+    char *sendbuf; //buffer
+    
+    FILE *pointer = fopen((const char *)"404.html", "rb");
+    if(pointer == NULL){
+      perror("Open 404 page: ");
+    }
+
+    sprintf(header,"HTTP/1.1 404 Not Found\r\n text/html\n\r\n");
+    send(client_sock,header,strlen(header),0); //sends the header first  
+
+    fseek (pointer, 0, SEEK_END); //seeks the end of the file
+    int fileLength = ftell(pointer); //total length og the file
+    rewind(pointer); //sets the pointer to start of the file again
+
+    sendbuf = (char*) malloc (sizeof(char)*fileLength); 
+    
+    size_t result = fread(sendbuf, 1, fileLength, pointer); //reads the whole file and stores length in result
+    send(client_sock, sendbuf, result, 0); //sends the file     
+
+    fclose(pointer);
+    fclose(filePointer); //was not found
+
+    
     return -1;
+
   }
-}
+} //receive
 
 //main
 
