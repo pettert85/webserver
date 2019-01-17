@@ -7,22 +7,54 @@
 sudo useradd -r -s /bin/nologin apache
 chmod +S --> for sudo. needs root to bind port 80.
 
-#### BASIC DOCKER commands#####
+#### Basic Docker commands #####
 docker build -t USERNAME/webserver .
 docker run -p 80:80 --name web USERNAME/webserver
 docker run -p 80:80 --name web -it USERNAME/webserver /bin/sh 
 
-##### mount volumes#########
+##### Mount volumes #########
 docker volume create www
 docker run -p 80:80 --name web -v www:/var/www USERNAME/webserver
-put filer i /var/lib/docker/volumes/www/_data/
+put files in /var/lib/docker/volumes/www/_data/
 
-###########Good reading about my_init:###########
+########### Good reading about my_init ###########
 https://blog.phusion.nl/2015/01/20/docker-and-the-pid-1-zombie-reaping-problem/
+
+HEAD
+########## CGROUPS - limit CPU usage of docker ####################
+docker run -p 80:80 --name web -v www:/var/www --cpus 0.1  petterth/webserver (0.1 = 10 %)
+docker stats -> shows
+
+########## Namespaces - How to ##########
+Prerequisites:
+The user (apache) needs ownership of several files and folders. So we need to chown -R apche:apache folder/ . 
+BE AWARE that -R will change ownership to the user for all subfolders and files. 
+1. /var/lib/docker/
+2. /var/www/
+
+Option 1: 
+dockerd --userns-remap="apache:apache" 
+This starts the docker daemon with the flag user namespaces and adds a user "testuser" to the system
+Warning: Some distributions, such as RHEL and CentOS 7.3, do not automatically add the new group to the /etc/subuid and /etc/subgid files.
+You are responsible for editing these files and assigning non-overlapping ranges
+
+Option 2 (Recomended by docker):
+Edit /etc/docker/daemon.json and add either:
+apache:apache (user:group. Can be any user on your system, except root that would be pointless :P)
+or:
+uid:gid (For the user you want to associate to the docker image)
+and also add:
+{
+  "userns-remap": "apache"
+}
+Note: To use the dockremap user and have Docker create it for you, set the value to default rather than testuser.
+
+For more detailed information see https://docs.docker.com/engine/security/userns-remap/
 
 ##########CGROUPS - limit CPU usage of docker.####################
 docker run -p 80:80 --name web -v www:/var/www --cpus 0.1  USERNAME/webserver (0.1 = 10 %)
 docker stats -> viser bruken
+a4c566f337b95d4db43855bf58214286c20b3693
 
 */
 
