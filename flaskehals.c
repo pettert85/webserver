@@ -81,14 +81,26 @@ int sd, client_sock, fd;
 socklen_t addr_len = sizeof(struct sockaddr_in);
 const char * path = "/var/www/";
 
-int errorLog(){
+int errorLog(char *msg){
 
       //Log information and perrror to "error.log" file
-      fprintf(stderr, "Client adress: %s: ",inet_ntoa(client_addr.sin_addr));
+      time_t t = time(NULL);
+      struct tm *tm = localtime(&t);
+      char s[64];
+      strftime(s, sizeof(s), "%c", tm);
+
+      if(msg == NULL){
+      fprintf(stderr, "%s - ip: %s: ",s,inet_ntoa(client_addr.sin_addr));
       perror("ERROR: ");
-     
+      }
+
+      else{
+      fprintf(stderr, "%s - ip: %s: %s ",s,inet_ntoa(client_addr.sin_addr),msg);
+      }
+
       return 0;
 }
+
 
 int clienthandler(int client_sock){
 
@@ -182,7 +194,7 @@ int clienthandler(int client_sock){
     
     FILE *pointer = fopen((const char *)"404.html", "rb");
     if(pointer == NULL){
-      perror("Open 404 page: ");
+      //perror("Open 404 page: ");
     }
 
     sprintf(header,"HTTP/1.1 404 Not Found\r\n text/html\n\r\n");
@@ -249,12 +261,17 @@ int main () {
   lok_adr.sin_port        = htons((u_short)PORT); 
   lok_adr.sin_addr.s_addr = htonl(INADDR_ANY);
 
+
+  
   //Binds socket and local address
-  if ( 0==bind(sd, (struct sockaddr *)&lok_adr, sizeof(lok_adr)) )
-    fprintf(stderr,"Webserver has pid: %d and is using port %d.\n\n", getpid(), PORT);
+  if ( 0==bind(sd, (struct sockaddr *)&lok_adr, sizeof(lok_adr))  ){
+  char gl[200];
+  sprintf(gl,"Webserver has pid: %d and is using port %d.\n\n", getpid(), PORT);
+  errorLog((char *) gl);    
+  }
 
   else { //something went wrong
-    errorLog();
+    errorLog(NULL);
     exit(1); 
   }
 
@@ -279,7 +296,7 @@ int main () {
     if(fork() == 0 ) {
   
     //Log client requests
-    fprintf(stderr,"New request from %s. \n", inet_ntoa(client_addr.sin_addr));
+    //errorLog(sprintf(NULL,"New request from %s. \n", inet_ntoa(client_addr.sin_addr)) );
 
     //Receive requests and send data to and from client.
     clienthandler(client_sock);
@@ -288,13 +305,13 @@ int main () {
     shutdown(client_sock, SHUT_RDWR);
 
     //Log closed connections
-    fprintf(stderr,"Connection to %s closed. \n\n", inet_ntoa(client_addr.sin_addr));
+    //fprintf(stderr,"Connection to %s closed. \n\n", inet_ntoa(client_addr.sin_addr));
     exit(0);   
 
     }//fork()
 
       
-     //The system ignores the signal given by the child upon termination and no zombie is created.
+    //The system ignores the signal given by the child upon termination and no zombie is created.
     signal(SIGCHLD,SIG_IGN); 
 
     //The parent process closes the filedescriptor and returns to wait for incoming connections.
