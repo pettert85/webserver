@@ -80,8 +80,9 @@ struct sockaddr_in lok_adr, client_addr;
 int sd, client_sock, fd;
 socklen_t addr_len = sizeof(struct sockaddr_in);
 const char * path = "/var/www/";
+char errorMessage[200];
 
-int errorLog(char *msg){
+int errorHandler(char *msg){
 
       //Log information and perrror to "error.log" file
       time_t t = time(NULL);
@@ -245,9 +246,9 @@ int main () {
     exit(0);
   }
  
-  mkdir("log/", 00770); // create log directory if it does not exist
+  mkdir("log/", 00777); // create log directory if it does not exist
   char per[] = "log/webserver.log"; //relative to chroot directory
-  fd = open(per,O_APPEND | O_CREAT | O_WRONLY,00666);
+  fd = open(per,O_APPEND | O_CREAT | O_WRONLY,00777);
   dup2(fd,2); //STDERR points to log file
       
   //Setter opp socket-strukturen
@@ -265,13 +266,13 @@ int main () {
   
   //Binds socket and local address
   if ( 0==bind(sd, (struct sockaddr *)&lok_adr, sizeof(lok_adr))  ){
-  char gl[200];
-  sprintf(gl,"Webserver has pid: %d and is using port %d.\n\n", getpid(), PORT);
-  errorLog((char *) gl);    
+  
+  sprintf(errorMessage,"Webserver has pid: %d and is using port %d.\n\n", getpid(), PORT);
+  errorHandler((char *) errorMessage);    
   }
 
   else { //something went wrong
-    errorLog(NULL);
+    errorHandler(NULL);
     exit(1); 
   }
 
@@ -296,8 +297,8 @@ int main () {
     if(fork() == 0 ) {
   
     //Log client requests
-    //errorLog(sprintf(NULL,"New request from %s. \n", inet_ntoa(client_addr.sin_addr)) );
-
+    sprintf(errorMessage,"New request from %s. \n", inet_ntoa(client_addr.sin_addr) );
+    errorHandler(errorMessage);
     //Receive requests and send data to and from client.
     clienthandler(client_sock);
 
@@ -305,7 +306,9 @@ int main () {
     shutdown(client_sock, SHUT_RDWR);
 
     //Log closed connections
-    //fprintf(stderr,"Connection to %s closed. \n\n", inet_ntoa(client_addr.sin_addr));
+    sprintf(errorMessage,"Connection to %s closed. \n\n", inet_ntoa(client_addr.sin_addr));
+    errorHandler(errorMessage);
+    
     exit(0);   
 
     }//fork()
