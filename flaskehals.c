@@ -27,10 +27,10 @@ docker stats -> shows
 
 ########## Namespaces - How to ##########
 Prerequisites:
-The user (apache) needs ownership of several files and folders. So we need to chown -R apche:apache folder/ . 
-BE AWARE that -R will change ownership to the user for all subfolders and files. 
-1. /var/lib/docker/
-2. /var/www/
+1. Need to add entries in /etc/subuid and /etc/subgid:
+apache:200000:65536 (make sure that the subuid and subgid does not overlap with other entries in these files).
+The system will now make a new folder: /var/lib/docker/200000:200000/www/_data 
+and you need to copy all the files from the volume you created in the Mount volumes section.
 
 Option 1: 
 dockerd --userns-remap="apache:apache" 
@@ -38,15 +38,16 @@ This starts the docker daemon with the flag user namespaces and adds a user "tes
 Warning: Some distributions, such as RHEL and CentOS 7.3, do not automatically add the new group to the /etc/subuid and /etc/subgid files.
 You are responsible for editing these files and assigning non-overlapping ranges
 
-Option 2 (Recomended by docker):
-Edit /etc/docker/daemon.json and add either:
-apache:apache (user:group. Can be any user on your system, except root that would be pointless :P)
-or:
-uid:gid (For the user you want to associate to the docker image)
-and also add:
+Option 2 (Recomended by docker) or copy the daemon.json file from this repository to /etc/docker/:
+Edit /etc/docker/daemon.json and add:
 {
   "userns-remap": "apache"
 }
+
+The docker daemon needs to be reloaded and restarted. In Ubuntu use the following commands:
+sudo systemctl daemon reload
+sudo systemctl restart docker.service
+
 Note: To use the dockremap user and have Docker create it for you, set the value to default rather than testuser.
 
 For more detailed information see https://docs.docker.com/engine/security/userns-remap/
