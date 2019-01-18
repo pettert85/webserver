@@ -210,6 +210,8 @@ int clienthandler(int client_sock){
     size_t result = fread(sendbuf, 1, fileLength, pointer); //reads the whole file and stores length in result
     send(client_sock, sendbuf, result, 0); //sends the file     
 
+    sprintf(errorMessage,"Error 404: The file \"%s.%s\" was not found on this server.\n\n",file,fileExtension);
+    errorHandler(errorMessage);
     fclose(pointer);
     fclose(filePointer); //was not found
 
@@ -268,7 +270,8 @@ int main () {
   if ( 0==bind(sd, (struct sockaddr *)&lok_adr, sizeof(lok_adr))  ){
   
   sprintf(errorMessage,"Webserver has pid: %d and is using port %d.\n\n", getpid(), PORT);
-  errorHandler((char *) errorMessage);    
+  errorHandler((char *) errorMessage);
+
   }
 
   else { //something went wrong
