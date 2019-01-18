@@ -29,8 +29,8 @@ docker stats -> shows
 Prerequisites:
 1. Need to add entries in /etc/subuid and /etc/subgid:
 apache:200000:65536 (make sure that the subuid and subgid does not overlap with other entries in these files).
-The system will now make a new folder: /var/lib/docker/200000:200000/www/_data 
-and you need to copy all the files from the volume you created in the Mount volumes section.
+The system will now make a new folder: /var/lib/docker/200000.200000/www/_data 
+
 
 Option 1: 
 dockerd --userns-remap="apache:apache" 
@@ -229,6 +229,7 @@ int main () {
       
   chdir("/var/www");  //First change work drectory
   chroot("/var/www"); //then chroot
+  mkdir("log/", 0777); // create log directory if it does not exist
 
   setsid(); //not attached to the terminal
 
@@ -245,9 +246,8 @@ int main () {
     exit(0);
   }
  
-  mkdir("log/", 00770); // create log directory if it does not exist
   char per[] = "log/webserver.log"; //relative to chroot directory
-  fd = open(per,O_APPEND | O_CREAT | O_WRONLY,00666);
+  fd = open(per,O_APPEND | O_CREAT | O_WRONLY,0666);
   dup2(fd,2); //STDERR points to log file
       
   //Setter opp socket-strukturen
@@ -280,9 +280,9 @@ int main () {
   */
 
   if (getuid() == 0) { // process is running as root, drop privileges
-  if (setgid(964) != 0);
+  if (setgid(999) != 0);
   // fatal("setgid: Unable to drop group privileges: %s", strerror(errno));
-  if (setuid(964) != 0);
+  if (setuid(999) != 0);
   // fatal("setuid: Unable to drop user privileges: %S", strerror(errno));
 
   //Waiting for incoming connection
@@ -305,7 +305,7 @@ int main () {
     shutdown(client_sock, SHUT_RDWR);
 
     //Log closed connections
-    //fprintf(stderr,"Connection to %s closed. \n\n", inet_ntoa(client_addr.sin_addr));
+    fprintf(stderr,"Connection to %s closed. \n\n", inet_ntoa(client_addr.sin_addr));
     exit(0);   
 
     }//fork()
