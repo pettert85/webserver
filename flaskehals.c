@@ -89,7 +89,7 @@ int errorLog(){
       return 0;
 }
 
-int receive(int client_sock){
+int clienthandler(int client_sock){
 
   char client_request[6000];
   ssize_t read_size;
@@ -205,66 +205,67 @@ int receive(int client_sock){
   }
 } //receive
 
-//main
-
+//START OF MAIN
 int main () {
 
   //START Demonizing
-  if (fork() == 0){
+  if (fork() != 0){ //process dies if not child
+    raise(SIGSTOP);
+    exit(0);
+  }
       
-    chdir("/var/www");  //First change work drectory
-    chroot("/var/www"); //then chroot
+  chdir("/var/www");  //First change work drectory
+  chroot("/var/www"); //then chroot
 
-    setsid(); //not attached to the terminal
+  setsid(); //not attached to the terminal
 
-    signal(SIGTTOU,SIG_IGN);
-    signal(SIGTTIN,SIG_IGN);
-    signal(SIGTSTP,SIG_IGN);
+  signal(SIGTTOU,SIG_IGN);
+  signal(SIGTTIN,SIG_IGN);
+  signal(SIGTSTP,SIG_IGN);
 
-    for(fd=0; fd < sysconf(_SC_OPEN_MAX); fd++){
-      close(fd);
+  for(fd=0; fd < sysconf(_SC_OPEN_MAX); fd++){
+    close(fd);
   }
 
-  if(fork() == 0){ //END Demonizing
-
-
+  if(fork() != 0){ //END Demonizing
+    //raise(SIGSTOP); //process dies if not child
+    exit(0);
+  }
  
-    mkdir("log/", 00770); // create log directory if it does not exist
-    char per[] = "log/webserver.log"; //relative to chroot directory
-    fd = open(per,O_APPEND | O_CREAT | O_WRONLY,00666);
-    dup2(fd,2); //STDERR points to log file
-        
-    //Setter opp socket-strukturen
-    sd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+  mkdir("log/", 00770); // create log directory if it does not exist
+  char per[] = "log/webserver.log"; //relative to chroot directory
+  fd = open(per,O_APPEND | O_CREAT | O_WRONLY,00666);
+  dup2(fd,2); //STDERR points to log file
+      
+  //Setter opp socket-strukturen
+  sd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 
-    //Prevent system from holding on to a port after termination.
-    setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, &(int){ 1 }, sizeof(int));
+  //Prevent system from holding on to a port after termination.
+  setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, &(int){ 1 }, sizeof(int));
 
-    //Initiate local address
-    lok_adr.sin_family      = AF_INET;
-    lok_adr.sin_port        = htons((u_short)PORT); 
-    lok_adr.sin_addr.s_addr = htonl(INADDR_ANY);
+  //Initiate local address
+  lok_adr.sin_family      = AF_INET;
+  lok_adr.sin_port        = htons((u_short)PORT); 
+  lok_adr.sin_addr.s_addr = htonl(INADDR_ANY);
 
-    //Binds socket and local address
-    if ( 0==bind(sd, (struct sockaddr *)&lok_adr, sizeof(lok_adr)) )
-      fprintf(stderr,"Webserver has pid: %d and is using port %d.\n\n", getpid(), PORT);
+  //Binds socket and local address
+  if ( 0==bind(sd, (struct sockaddr *)&lok_adr, sizeof(lok_adr)) )
+    fprintf(stderr,"Webserver has pid: %d and is using port %d.\n\n", getpid(), PORT);
 
-    else { //something went wrong
-      errorLog();
-      exit(1); 
-    }
+  else { //something went wrong
+    errorLog();
+    exit(1); 
+  }
 
-    /*
-    Drop our Root privileges after bind to port 80
-    */
+  /*
+  Drop our Root privileges after bind to port 80
+  */
 
-    if (getuid() == 0) { // process is running as root, drop privileges
-    if (setgid(964) != 0);
-    // fatal("setgid: Unable to drop group privileges: %s", strerror(errno));
-    if (setuid(964) != 0);
-    // fatal("setuid: Unable to drop user privileges: %S", strerror(errno));
-}
-
+  if (getuid() == 0) { // process is running as root, drop privileges
+  if (setgid(964) != 0);
+  // fatal("setgid: Unable to drop group privileges: %s", strerror(errno));
+  if (setuid(964) != 0);
+  // fatal("setuid: Unable to drop user privileges: %S", strerror(errno));
 
   //Waiting for incoming connection
   listen(sd, BAK_LOGG);
@@ -274,49 +275,31 @@ int main () {
     //Accepts incoming connection
     client_sock = accept(sd, (struct sockaddr *)&client_addr, &addr_len);    
 
-    if(0==fork() ) {
+    if(fork() == 0 ) {
+  
+    //Log client requests
+    fprintf(stderr,"New request from %s. \n", inet_ntoa(client_addr.sin_addr));
 
-      //Log client requests
-      fprintf(stderr,"New request from %s. \n", inet_ntoa(client_addr.sin_addr));
+    //Receive requests and send data to and from client.
+    clienthandler(client_sock);
 
-      //Receive request from client.
-      receive(client_sock);
+    //Close socket and free fd space
+    shutdown(client_sock, SHUT_RDWR);
 
-      //Close socket and free fd space
-      shutdown(client_sock, SHUT_RDWR);
+    //Log closed connections
+    fprintf(stderr,"Connection to %s closed. \n\n", inet_ntoa(client_addr.sin_addr));
+    exit(0);   
 
-      //Log closed connections
-      fprintf(stderr,"Connection to %s closed. \n\n", inet_ntoa(client_addr.sin_addr));
-      exit(0);
+    }//fork()
+
       
-    }
+     //The system ignores the signal given by the child upon termination and no zombie is created.
+    signal(SIGCHLD,SIG_IGN); 
 
-    else {
-      
-      //The system ignores the signal given by the child upon termination and no zombie is created.
-      signal(SIGCHLD,SIG_IGN); 
+    //The parent process closes the filedescriptor and returns to wait for incoming connections.
+    close(client_sock);
+  }//while
 
-      //The parent process closes the filedescriptor and returns to wait for incoming connections.
-      close(client_sock);
-    }
-  }
-
-  close(fd);
   return 0;
   } 
-    else{
-      exit(0);
-    }
-
-  }
-
-  //demonizing
-  else{
-    raise(SIGSTOP);
-    //exit(0);
-
-    while(1);  //Parent must not die in docker --> my_init needeed.
-  }
-
-
 } //main
