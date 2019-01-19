@@ -20,7 +20,6 @@ put files in /var/lib/docker/volumes/www/_data/
 ########### Good reading about my_init ###########
 https://blog.phusion.nl/2015/01/20/docker-and-the-pid-1-zombie-reaping-problem/
 
-HEAD
 ########## CGROUPS - limit CPU usage of docker ####################
 docker run -p 80:80 --name web -v www:/var/www --cpus 0.1  petterth/webserver (0.1 = 10 %)
 docker stats -> shows
@@ -29,8 +28,8 @@ docker stats -> shows
 Prerequisites:
 1. Need to add entries in /etc/subuid and /etc/subgid:
 apache:200000:65536 (make sure that the subuid and subgid does not overlap with other entries in these files).
-The system will now make a new folder: /var/lib/docker/200000:200000/www/_data 
-and you need to copy all the files from the volume you created in the Mount volumes section.
+The system will now make a new folder: /var/lib/docker/200000.200000/www/_data 
+
 
 Option 1: 
 dockerd --userns-remap="apache:apache" 
@@ -232,6 +231,7 @@ int main () {
       
   chdir("/var/www");  //First change work drectory
   chroot("/var/www"); //then chroot
+  mkdir("log/", 0777); // create log directory if it does not exist
 
   setsid(); //not attached to the terminal
 
@@ -248,9 +248,11 @@ int main () {
     exit(0);
   }
  
+HEAD
   mkdir("log/", 00777); // create log directory if it does not exist
   char per[] = "log/webserver.log"; //relative to chroot directory
   fd = open(per,O_APPEND | O_CREAT | O_WRONLY,00777);
+00b55cc16f5051408786b7642db301d2d3acde5b
   dup2(fd,2); //STDERR points to log file
       
   //Setter opp socket-strukturen
@@ -284,9 +286,9 @@ int main () {
   */
 
   if (getuid() == 0) { // process is running as root, drop privileges
-  if (setgid(964) != 0);
+  if (setgid(999) != 0);
   // fatal("setgid: Unable to drop group privileges: %s", strerror(errno));
-  if (setuid(964) != 0);
+  if (setuid(999) != 0);
   // fatal("setuid: Unable to drop user privileges: %S", strerror(errno));
 
   //Waiting for incoming connection
@@ -309,9 +311,11 @@ int main () {
     shutdown(client_sock, SHUT_RDWR);
 
     //Log closed connections
+HEAD
     sprintf(errorMessage,"Connection to %s closed. \n\n", inet_ntoa(client_addr.sin_addr));
     errorHandler(errorMessage);
     
+00b55cc16f5051408786b7642db301d2d3acde5b
     exit(0);   
 
     }//fork()
