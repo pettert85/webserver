@@ -3,6 +3,7 @@ body {
 }
 
 h1 {
+  text-shadow: 6px 3px grey;
   color: maroon;
   margin-left: 20px;
 }
