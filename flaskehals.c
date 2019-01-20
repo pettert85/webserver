@@ -20,6 +20,7 @@ put files in /var/lib/docker/volumes/www/_data/
 ########### Good reading about my_init ###########
 https://blog.phusion.nl/2015/01/20/docker-and-the-pid-1-zombie-reaping-problem/
 
+HEAD
 ########## CGROUPS - limit CPU usage of docker ####################
 docker run -p 80:80 --name web -v www:/var/www --cpus 0.1  petterth/webserver (0.1 = 10 %)
 docker stats -> shows
@@ -28,8 +29,8 @@ docker stats -> shows
 Prerequisites:
 1. Need to add entries in /etc/subuid and /etc/subgid:
 apache:200000:65536 (make sure that the subuid and subgid does not overlap with other entries in these files).
-The system will now make a new folder: /var/lib/docker/200000.200000/www/_data 
-
+The system will now make a new folder: /var/lib/docker/200000:200000/www/_data 
+and you need to copy all the files from the volume you created in the Mount volumes section.
 
 Option 1: 
 dockerd --userns-remap="apache:apache" 
@@ -80,66 +81,12 @@ int sd, client_sock, fd;
 socklen_t addr_len = sizeof(struct sockaddr_in);
 const char * path = "/var/www/";
 char errorMessage[200];
+char *token;
 
-int errorHandler(char *msg){
-
-      //Log information and perrror to "error.log" file
-      time_t t = time(NULL);
-      struct tm *tm = localtime(&t);
-      char s[64];
-      strftime(s, sizeof(s), "%c", tm);
-
-      if(msg == NULL){
-      fprintf(stderr, "%s - ip: %s: ",s,inet_ntoa(client_addr.sin_addr));
-      perror("ERROR: ");
-      }
-
-      else{
-      fprintf(stderr, "%s - ip: %s: %s ",s,inet_ntoa(client_addr.sin_addr),msg);
-      }
-
-      return 0;
-}
-
-
-int clienthandler(int client_sock){
-
-  char client_request[6000];
-  ssize_t read_size;
-
-  //Read clients request (GET)
-  read_size = recv(client_sock,client_request,6000,0);
-  char *file;
-  char *fileExtension;
-
-  /*
-  strtok splits the string "GET /html/info.asis HTTP/1.1" into separate words:
-  Get, /html/info.asis and HTTP/1.1 using escape character. 
-  The line " file = strtok (NULL, " "); " moves to the 2nd word. /html/info.asis
-  then we simply chop off the first char so it looks like:
-  html/info.asis
-  */
-
-  file = strtok (client_request," ");
-  file = strtok (NULL, " "); //show 2nd word
-  file = file + 1; //remove first char /
-
-  //try to opening the requested file
-  FILE *filePointer = fopen(file, "rb");
-
-  //split the string some more to find correct file extension
-  fileExtension = strtok(file,".");
-  fileExtension = strtok(NULL,".");
-
-
-  if( filePointer != NULL) {   //if file exists and can be opened, send it!
-   
-    if(strcmp(fileExtension,"asis") != 0){  //get header from mime.types file
-
-      char * line = NULL;
+char * mimeTypeHandler( char* fileExtension){
+  char * line = NULL;
       size_t len = 0;
       ssize_t read;
-      char *token;
       char *match;
       FILE *mimeFilePointer; 
       char delim[] = "\t\n"; //FML so very very much
@@ -167,58 +114,129 @@ int clienthandler(int client_sock){
       free(line);
       fclose(mimeFilePointer); //close mime.types file
 
-      //char * conttype="Content-Transfer-Encoding: binary"; // must only be used for binary files eg images
-      char header[200];
-      sprintf(header,"HTTP/1.1 200 OK\r\n %s\n\r\n",mimetype);
-      send(client_sock,header,strlen(header),0); //sends the header first header
-    }
+      return mimetype;
+  }//mimeTypeHandler()
 
-    //send the file
-    char *sendbuf; //buffer
-    fseek (filePointer, 0, SEEK_END); //seeks the end of the file
-    int fileLength = ftell(filePointer); //total length og the file
-    rewind(filePointer); //sets the pointer to start of the file again
+int errorHandler(char *msg){
 
-    sendbuf = (char*) malloc (sizeof(char)*fileLength); 
-   
-    size_t result = fread(sendbuf, 1, fileLength, filePointer); //reads the whole file and stores length in result
-    send(client_sock, sendbuf, result, 0); //sends the file     
-    fclose(filePointer); //Close file again
-    return 0;
-  }
+      //Log information and perrror to "error.log" file
+      time_t t = time(NULL);
+      struct tm *tm = localtime(&t);
+      char s[64];
+      strftime(s, sizeof(s), "%c", tm);
 
-  else {  //page not found, send 404 error back to client 
+      if(msg == NULL){
+      fprintf(stderr,"%s -  char * filePointerip: s: ",s,inet_ntoa(client_addr.sin_addr));
+      perror("ERROR: ");
+      }
 
-    char header[200];
-    char *sendbuf; //buffer
-    
-    FILE *pointer = fopen((const char *)"404.html", "rb");
-    if(pointer == NULL){
-      //perror("Open 404 page: ");
-    }
+      else{
+      fprintf(stderr, "%s - ip: %s: %s ",s,inet_ntoa(client_addr.sin_addr),msg);
+      }
 
-    sprintf(header,"HTTP/1.1 404 Not Found\r\n text/html\n\r\n");
-    send(client_sock,header,strlen(header),0); //sends the header first  
+      return 0;
+}//errorhandler()
 
-    fseek (pointer, 0, SEEK_END); //seeks the end of the file
-    int fileLength = ftell(pointer); //total length og the file
-    rewind(pointer); //sets the pointer to start of the file again
+int sendHandler(int socket, char *URI, char * ext ){
+  char header[200];
+  char *sendbuf; //buffer
+  char *responseCode ="HTTP/1.1 200 OK";
+  int length;
+  FILE *fp =NULL;
 
-    sendbuf = (char*) malloc (sizeof(char)*fileLength); 
-    
-    size_t result = fread(sendbuf, 1, fileLength, pointer); //reads the whole file and stores length in result
-    send(client_sock, sendbuf, result, 0); //sends the file     
+  fp = fopen(URI, "rb");   //try to opening the requested file
 
-    sprintf(errorMessage,"Error 404: The file \"%s.%s\" was not found on this server.\n\n",file,fileExtension);
+  if(fp == NULL){
+    fp = fopen((const char *)"/404.html", "rb");
+    ext = "html";
+    responseCode ="HTTP/1.1 404 Not Found";
+
+    sprintf(errorMessage,"Page: %s - 404 not found\n",URI);
     errorHandler(errorMessage);
-    fclose(pointer);
-    fclose(filePointer); //was not found
+  }
 
-    
-    return -1;
+  //send header first ( unless its an asis file)
+  if(strcmp(ext,"asis") != 0){  //get header from mime.types file
+    char * mimetype = mimeTypeHandler(ext);
+    sprintf(header,"%s\r\n %s\n\r\n",responseCode,mimetype);
+    send(client_sock,header,strlen(header),0);
+  }
+
+  //Then we send the file
+  
+  fseek (fp, 0, SEEK_END); //seeks the end of the file
+  length = ftell(fp); //total length og the file
+  rewind(fp); //sets the pointer to start of the file again
+
+  sendbuf = (char*) malloc (sizeof(char)*length); 
+ 
+  size_t result = fread(sendbuf, 1, length, fp); //reads the whole file and stores length in result
+  send(client_sock, sendbuf, result, 0); //sends the file     
+  fclose(fp); //Close file again
+  
+  return 0;
+}//sendHandler()
+
+
+int clienthandler(int client_sock){
+
+  char client_request[6000];
+  char c[2]; 
+  ssize_t read_size;
+  char *type,*request,*URI,*fileExtension;
+
+  //Read clients request (GET)
+  read_size = recv(client_sock,client_request,6000,0);
+
+  //split request into tokens
+  token = strtok (client_request," ");
+  for(int i =0; i < 3; i++){
+        if(i == 0){
+          request = token; 
+        }
+
+        else if(i == 1){
+          token = strtok (NULL, " "); //next token
+          URI = token;
+
+          token = strtok(NULL," "); //next token
+          type = token;
+        }
+
+        else if(i == 2){
+          //check for GET / ONLY
+          sprintf(c,"%c",URI[(strlen(URI)-1)]); //finds last char
+          if( (strcmp(c,"/")) == 0 ){
+            char * index="index.html";
+            char * result;
+
+            result = malloc(strlen(URI) + strlen(index) + 1);
+            strcpy(result, URI);
+
+            strcat(result,index);
+            strcpy(URI, result);
+          }
+
+          //find  fileExtension
+          char ext[200];
+          strcpy(ext,URI); //preserve original URI
+          token = strtok (ext, "."); //tokenize
+          token = strtok(NULL,"."); //next token
+          fileExtension = token;
+      
+        fprintf(stderr, "request: %s. URI: %s. Type: %s. Ext: %s\n",request,URI,type,fileExtension );
+        }
 
   }
-} //receive
+   
+  sendHandler(client_sock,URI,fileExtension ); //send file
+
+  return 0;
+} //clientHandler()
+
+
+
+
 
 //START OF MAIN
 int main () {
@@ -231,7 +249,6 @@ int main () {
       
   chdir("/var/www");  //First change work drectory
   chroot("/var/www"); //then chroot
-  mkdir("log/", 0777); // create log directory if it does not exist
 
   setsid(); //not attached to the terminal
 
@@ -248,11 +265,9 @@ int main () {
     exit(0);
   }
  
-HEAD
   mkdir("log/", 00777); // create log directory if it does not exist
   char per[] = "log/webserver.log"; //relative to chroot directory
   fd = open(per,O_APPEND | O_CREAT | O_WRONLY,00777);
-00b55cc16f5051408786b7642db301d2d3acde5b
   dup2(fd,2); //STDERR points to log file
       
   //Setter opp socket-strukturen
@@ -265,15 +280,12 @@ HEAD
   lok_adr.sin_family      = AF_INET;
   lok_adr.sin_port        = htons((u_short)PORT); 
   lok_adr.sin_addr.s_addr = htonl(INADDR_ANY);
-
-
   
   //Binds socket and local address
   if ( 0==bind(sd, (struct sockaddr *)&lok_adr, sizeof(lok_adr))  ){
   
   sprintf(errorMessage,"Webserver has pid: %d and is using port %d.\n\n", getpid(), PORT);
   errorHandler((char *) errorMessage);
-
   }
 
   else { //something went wrong
@@ -286,9 +298,9 @@ HEAD
   */
 
   if (getuid() == 0) { // process is running as root, drop privileges
-  if (setgid(999) != 0);
+  if (setgid(964) != 0);
   // fatal("setgid: Unable to drop group privileges: %s", strerror(errno));
-  if (setuid(999) != 0);
+  if (setuid(964) != 0);
   // fatal("setuid: Unable to drop user privileges: %S", strerror(errno));
 
   //Waiting for incoming connection
@@ -302,22 +314,18 @@ HEAD
     if(fork() == 0 ) {
   
     //Log client requests
-    sprintf(errorMessage,"New request from %s. \n", inet_ntoa(client_addr.sin_addr) );
-    errorHandler(errorMessage);
-    //Receive requests and send data to and from client.
+    errorHandler("New request\n");
+    
+    //Receive and answer to clients requests
     clienthandler(client_sock);
 
     //Close socket and free fd space
     shutdown(client_sock, SHUT_RDWR);
 
     //Log closed connections
-HEAD
-    sprintf(errorMessage,"Connection to %s closed. \n\n", inet_ntoa(client_addr.sin_addr));
-    errorHandler(errorMessage);
+    errorHandler("connection closed\n\n");
     
-00b55cc16f5051408786b7642db301d2d3acde5b
     exit(0);   
-
     }//fork()
 
       
@@ -330,4 +338,4 @@ HEAD
 
   return 0;
   } 
-} //main
+} //main()
