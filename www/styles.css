@@ -1,0 +1,40 @@
+body {
+  background-color: lightblue;
+}
+
+h1 {
+  text-shadow: 6px 3px grey;
+  color: maroon;
+  margin-left: 20px;
+}
+
+#normal {
+  font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+  border-collapse: collapse;
+  border: 1px dashed black;
+  width: 80%;
+}
+
+#normal tr:nth-child(even){background-color: #f2f2f2;}
+
+#normal tr:hover {background-color: #ddd;}
+
+#normal td {width="80%"; text-align: left; vertical-align: top;}
+
+#normal th {
+  padding-top: 12px;
+  padding-bottom: 12px;
+  text-align: left;
+  background-color: 73AD21;
+  color: white;
+  }
+
+  #para {
+  border-radius: 25px;
+  border: 2px solid #73AD21;
+  padding: 20px;
+  width: 200px;
+  height: 150px;
+  text-align: center;
+  vertical-align: middle;
+}
