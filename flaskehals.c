@@ -162,9 +162,7 @@ int errorHandler(char *msg){
       strftime(s, sizeof(s), "%c", tm);
 
       if(msg == NULL){
-HEAD
       fprintf(stderr,"%s -  char * filePointerip: %s: ",s,inet_ntoa(client_addr.sin_addr));
-5abd5bfdbe268c6cab572ca814d5fae1107167ec
       perror("ERROR: ");
       }
 
