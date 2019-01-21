@@ -1,36 +1,21 @@
 <html>
+	<script src="/include.js"></script>
 <head><title>WebSite</title>
-<link rel="stylesheet" type="text/css" href="styles.css">
+<link rel="stylesheet" type="text/css" href="/styles.css">
 </head>
 <body bgcolor="556B2F">
 <center>
 <h1>Welcome to our website!</h1>
 
 <p>click <a href="html/info.asis">here</a> for more information in plain text</p>
-<table id="normal">
-	<tr>
-		<th>Navn</th>
-		<th>Adresse</th>
-	</tr>
-	<tr>
-		<td alignement="topleft">Per H&oslash;st</td>
-		<td>Sm&oslash;rbukkveien 45</td>
-	</tr>
-	<tr>
-		<td>Esben Nordman</td> 
-		<td>Titangaten 6</td>
-	</tr>
-	<tr>
-		<td>Ane Hansen</td>
-		<td>Granli psykiatriske</td>
-	</tr>
-</table>
+
+<div w3-include-HTML="/dir.html"></div><script>w3.includeHTML();</script>
+
 <table cellspacing="20">
 	<tr>
 		<td><p id="para"><img src="/images/tux.png" height="150px"></p></td>
 		<td><p id="para">
-Q. What is the biggest lie in the entire universe? A. I have read and agree to the Terms and Conditions.</p></td>
-	</tr></table>
+			Q. What is the biggest lie in the entire universe? A. I have read and agree to the Terms and Conditions.</p></td></tr></table>
 </center>
 </body>
 </html>

@@ -71,6 +71,7 @@ a4c566f337b95d4db43855bf58214286c20b3693
 #include <sys/wait.h> 
 #include <signal.h>
 #include <errno.h>
+#include <dirent.h>
 
 #define PORT 80
 #define BAK_LOGG 10 // Max number of waiting connections
@@ -82,6 +83,41 @@ socklen_t addr_len = sizeof(struct sockaddr_in);
 const char * path = "/var/www/";
 char errorMessage[200];
 char *token;
+int dirfp;
+
+void directoryListing(char *filsti){
+  void directoryListing(char *filsti);
+
+  struct stat stat_buffer;
+  struct dirent *ent;
+  DIR *dir;
+
+  if ((dir = opendir (filsti)) == NULL) {
+    perror (""); exit(1); }
+
+//  int dirfp = open("/dir.html",O_CREAT | O_WRONLY,00644);
+
+//  dup2(dirfp,1);
+  chdir(filsti);
+
+
+  printf("<table id=\"normal\"><tr><th>Directory: %s</th><th>&nbsp;</th><th>&nbsp;</th><th>&nbsp;</th>",filsti);
+  printf("<tr><th>Permissions</th><th>UID</th><th>GID</th><th>Name</th></tr>\n" );
+
+  while ((ent = readdir (dir)) != NULL) {
+
+    if (stat (ent->d_name, &stat_buffer) < 0) {
+      perror(""); exit(2); }
+
+    printf("<tr><td>%o</td><td>%d</td><td>%d</td><td><a href=\"%s\">%s</a></td></tr>\n",stat_buffer.st_mode & 0777, stat_buffer.st_uid,stat_buffer.st_gid, ent->d_name,ent->d_name);
+  }
+
+  printf("</table>");
+  
+  closedir (dir);
+  chdir("/");
+  close(dirfp);
+}
 
 char * mimeTypeHandler( char* fileExtension){
   char * line = NULL;
@@ -126,7 +162,7 @@ int errorHandler(char *msg){
       strftime(s, sizeof(s), "%c", tm);
 
       if(msg == NULL){
-      fprintf(stderr,"%s -  char * filePointerip: s: ",s,inet_ntoa(client_addr.sin_addr));
+      fprintf(stderr,"%s -  char * filePointerip: %s: ",s,inet_ntoa(client_addr.sin_addr));
       perror("ERROR: ");
       }
 
@@ -207,6 +243,8 @@ int clienthandler(int client_sock){
           //check for GET / ONLY
           sprintf(c,"%c",URI[(strlen(URI)-1)]); //finds last char
           if( (strcmp(c,"/")) == 0 ){
+            directoryListing(URI);
+            
             char * index="index.html";
             char * result;
 
@@ -265,8 +303,16 @@ int main () {
     exit(0);
   }
  
+  char per1[] = "dir.html";
+
+  dirfp = open(per1,O_CREAT | O_WRONLY | O_TRUNC,00777);
+  dup2(dirfp,1);
+
   mkdir("log/", 00777); // create log directory if it does not exist
   char per[] = "log/webserver.log"; //relative to chroot directory
+
+
+
   fd = open(per,O_APPEND | O_CREAT | O_WRONLY,00777);
   dup2(fd,2); //STDERR points to log file
       
