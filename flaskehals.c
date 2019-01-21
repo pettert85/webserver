@@ -162,7 +162,9 @@ int errorHandler(char *msg){
       strftime(s, sizeof(s), "%c", tm);
 
       if(msg == NULL){
+HEAD
       fprintf(stderr,"%s -  char * filePointerip: %s: ",s,inet_ntoa(client_addr.sin_addr));
+5abd5bfdbe268c6cab572ca814d5fae1107167ec
       perror("ERROR: ");
       }
 
@@ -330,8 +332,8 @@ int main () {
   //Binds socket and local address
   if ( 0==bind(sd, (struct sockaddr *)&lok_adr, sizeof(lok_adr))  ){
   
-  sprintf(errorMessage,"Webserver has pid: %d and is using port %d.\n\n", getpid(), PORT);
-  errorHandler((char *) errorMessage);
+   sprintf(errorMessage,"Webserver has pid: %d and is using port %d.\n\n", getpid(), PORT);
+   errorHandler((char *) errorMessage);
   }
 
   else { //something went wrong
