@@ -6,5 +6,4 @@
 
 gcc flaskehals.c -o flaskehals -static
 docker build -t $1/webserver .
-HEAD
 docker run --rm -p 80:80 --name web -v /opt/www:/var/www --cpus 0.9 --cap-drop KILL $1/webserver &

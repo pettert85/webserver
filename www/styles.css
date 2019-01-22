@@ -11,7 +11,7 @@ h1 {
 #normal {
   font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
   border-collapse: collapse;
-  border: 1px dashed black;
+  border: 1px solid black;
   width: 80%;
 }
 

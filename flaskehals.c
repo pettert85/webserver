@@ -78,80 +78,13 @@ a4c566f337b95d4db43855bf58214286c20b3693
 
 //Global variables
 struct sockaddr_in lok_adr, client_addr;
-int sd, client_sock, fd;
+int sd, client_sock, fd,dirfp;
 socklen_t addr_len = sizeof(struct sockaddr_in);
 const char * path = "/var/www/";
 char errorMessage[200];
 char *token;
-int dirfp;
-
-void directoryListing(char *filsti){
-  void directoryListing(char *filsti);
-
-  struct stat stat_buffer;
-  struct dirent *ent;
-  DIR *dir;
-
-  if ((dir = opendir (filsti)) == NULL) {
-    perror (""); exit(1); }
-
-//  int dirfp = open("/dir.html",O_CREAT | O_WRONLY,00644);
-
-//  dup2(dirfp,1);
-  chdir(filsti);
-
-
-  printf("<table id=\"normal\"><tr><th>Directory: %s</th><th>&nbsp;</th><th>&nbsp;</th><th>&nbsp;</th>",filsti);
-  printf("<tr><th>Permissions</th><th>UID</th><th>GID</th><th>Name</th></tr>\n" );
-
-  while ((ent = readdir (dir)) != NULL) {
-
-    if (stat (ent->d_name, &stat_buffer) < 0) {
-      perror(""); exit(2); }
-
-    printf("<tr><td>%o</td><td>%d</td><td>%d</td><td><a href=\"%s\">%s</a></td></tr>\n",stat_buffer.st_mode & 0777, stat_buffer.st_uid,stat_buffer.st_gid, ent->d_name,ent->d_name);
-  }
-
-  printf("</table>");
-  
-  closedir (dir);
-  chdir("/");
-  close(dirfp);
-}
-
-char * mimeTypeHandler( char* fileExtension){
-  char * line = NULL;
-      size_t len = 0;
-      ssize_t read;
-      char *match;
-      FILE *mimeFilePointer; 
-      char delim[] = "\t\n"; //FML so very very much
-      char yeah[400];
-      char * mimetype;
-      mimeFilePointer = fopen("mime.types","r"); 
-      
-      while ((read = getline(&line, &len, mimeFilePointer)) != -1) { //read mime.types line by line
-        strcpy(yeah,line);
-        token = strtok(yeah,delim); //split each line into tokens
-
-        while ( token != NULL ) { 
-          if((strcmp(token,fileExtension) ) == 0 ){ //we have match
-            //fprintf(stderr, "match: %s and %s - header is: %s\n",token,fileExtension,match );
-            mimetype=match;
-            break;
-          }
-
-          else{ //no match, keep going
-          match = strdup(token); //keep previous token for header            
-          token = strtok(NULL,delim); //point to next element
-          }
-        }
-      }
-      free(line);
-      fclose(mimeFilePointer); //close mime.types file
-
-      return mimetype;
-  }//mimeTypeHandler()
+DIR *dir;
+char c[2];
 
 int errorHandler(char *msg){
 
@@ -163,6 +96,7 @@ int errorHandler(char *msg){
 
       if(msg == NULL){
       fprintf(stderr,"%s -  char * filePointerip: %s: ",s,inet_ntoa(client_addr.sin_addr));
+
       perror("ERROR: ");
       }
 
@@ -173,20 +107,100 @@ int errorHandler(char *msg){
       return 0;
 }//errorhandler()
 
+void directoryListing(char *filsti){
+  struct stat stat_buffer;
+  struct dirent *ent;
+
+  if ((dir = opendir (filsti)) == NULL) {
+    errorHandler(NULL);
+    exit(1); 
+  }
+  
+  chdir(filsti);
+
+  char stor[6000];
+  sprintf(stor,"<html><head><title>Directory listing</title> \
+  <link rel=\"stylesheet\" type=\"text/css\" href=\"/styles.css\">\
+  </head><body><center>\
+  <h1>Directory listing for: %s </h1>\
+  <table id=\"normal\"><tr><th>Permissions</th><th>UID</th><th>GID</th><th>Name</th></tr>\n",filsti );
+
+  send(client_sock,stor,strlen(stor),0); //send start of page
+
+  //Loop through directory and send all entries
+  while ((ent = readdir (dir)) != NULL) {
+
+    if (stat (ent->d_name, &stat_buffer) < 0) {
+      errorHandler(NULL);
+      exit(2);
+    }
+    
+    sprintf(stor,"<tr><td>%o</td><td>%d</td><td>%d</td><td>\
+    <a href=\"%s%s\">%s</a></td></tr>\n",stat_buffer.st_mode & 0777, stat_buffer.st_uid,stat_buffer.st_gid, filsti,ent->d_name,ent->d_name);
+    send(client_sock,stor,strlen(stor),0);
+  } //while 
+    
+  //send the rest of the page  
+  sprintf(stor,"</table>\
+  <table cellspacing=\"20\">\
+  <tr>\
+  <td><p id=\"para\"><img src=\"/images/tux.png\" height=\"150px\"></p></td>\
+  <td><p id=\"para\">\
+  Q. What is the biggest lie in the entire universe? A. I have read and agree to the Terms and Conditions.</p></td></tr></table>\
+  </center></body>\
+  </html>");
+  
+  send(client_sock,stor,strlen(stor),0); 
+  closedir (dir);
+  close(dirfp);
+  chdir("/");
+}//directoryListing()
+
+char * mimeTypeHandler( char* fileExtension){
+  char * line = NULL;
+  size_t len = 0;
+  ssize_t read;
+  char *match;
+  FILE *mimeFilePointer; 
+  char delim[] = "\t\n"; //FML so very very much
+  char yeah[400];
+  char * mimetype;
+  mimeFilePointer = fopen("mime.types","r"); 
+      
+  while ((read = getline(&line, &len, mimeFilePointer)) != -1) { //read mime.types line by line
+    strcpy(yeah,line);
+    token = strtok(yeah,delim); //split each line into tokens
+
+    while ( token != NULL ) { 
+      if((strcmp(token,fileExtension) ) == 0 ){ //we have match
+        //fprintf(stderr, "match: %s and %s - header is: %s\n",token,fileExtension,match );
+        mimetype=match;
+        break;
+      }
+
+      else{ //no match, keep going
+        match = strdup(token); //keep previous token for header            
+        token = strtok(NULL,delim); //point to next element
+      }
+    }
+  }
+  free(line);
+  fclose(mimeFilePointer); //close mime.types file
+  return mimetype;
+}//mimeTypeHandler()
+
 int sendHandler(int socket, char *URI, char * ext ){
   char header[200];
   char *sendbuf; //buffer
   char *responseCode ="HTTP/1.1 200 OK";
   int length;
   FILE *fp =NULL;
-
   fp = fopen(URI, "rb");   //try to opening the requested file
 
-  if(fp == NULL){
+  if(fp == NULL && strcmp(URI,"/") != 0 ){
     fp = fopen((const char *)"/404.html", "rb");
     ext = "html";
     responseCode ="HTTP/1.1 404 Not Found";
-
     sprintf(errorMessage,"Page: %s - 404 not found\n",URI);
     errorHandler(errorMessage);
   }
@@ -198,97 +212,93 @@ int sendHandler(int socket, char *URI, char * ext ){
     send(client_sock,header,strlen(header),0);
   }
 
-  //Then we send the file
+  //check for directory
+  sprintf(c,"%c",URI[(strlen(URI)-1)]); //finds last char
+  if( (strcmp(c,"/")) == 0 ){
+    directoryListing(URI); //handles the rest here
+    return 0; 
+  }
   
-  fseek (fp, 0, SEEK_END); //seeks the end of the file
-  length = ftell(fp); //total length og the file
-  rewind(fp); //sets the pointer to start of the file again
+  else{   //finally if it`s not a directory, we send the file
 
-  sendbuf = (char*) malloc (sizeof(char)*length); 
- 
-  size_t result = fread(sendbuf, 1, length, fp); //reads the whole file and stores length in result
-  send(client_sock, sendbuf, result, 0); //sends the file     
-  fclose(fp); //Close file again
-  
-  return 0;
+    fseek (fp, 0, SEEK_END); //seeks the end of the file
+    length = ftell(fp); //total length og the file
+    rewind(fp); //sets the pointer to start of the file again
+
+    sendbuf = (char*) malloc (sizeof(char)*length); 
+   
+    size_t result = fread(sendbuf, 1, length, fp); //reads the whole file and stores length in result
+    send(client_sock, sendbuf, result, 0); //sends the file     
+    fclose(fp); //Close file again
+    
+    return 0;
+  }
 }//sendHandler()
 
 
 int clienthandler(int client_sock){
+  /*
+  Reads requests from clients, splits it into variables
+  and handles accordingly to type of request
+  */
 
   char client_request[6000];
-  char c[2]; 
   ssize_t read_size;
   char *type,*request,*URI,*fileExtension;
 
   //Read clients request (GET)
   read_size = recv(client_sock,client_request,6000,0);
 
-  //split request into tokens
+  //split request into tokens (variables)
   token = strtok (client_request," ");
-  for(int i =0; i < 3; i++){
-        if(i == 0){
-          request = token; 
-        }
+  request = token; 
+  token = strtok (NULL, " "); //next token
+  URI = token;
+  token = strtok(NULL," "); //next token
+  type = token;    
 
-        else if(i == 1){
-          token = strtok (NULL, " "); //next token
-          URI = token;
+  if ((dir = opendir (URI)) != NULL ){
+    sprintf(c,"%c",URI[(strlen(URI)-1)]); //finds last char in URI
+    if( (strcmp(c,"/")) != 0 ){
+      char * chr ="/" ;
+      char * result = malloc(strlen(URI) + strlen(chr) + 1);
+      strcpy(result, URI);
 
-          token = strtok(NULL," "); //next token
-          type = token;
-        }
-
-        else if(i == 2){
-          //check for GET / ONLY
-          sprintf(c,"%c",URI[(strlen(URI)-1)]); //finds last char
-          if( (strcmp(c,"/")) == 0 ){
-            directoryListing(URI);
-            
-            char * index="index.html";
-            char * result;
-
-            result = malloc(strlen(URI) + strlen(index) + 1);
-            strcpy(result, URI);
-
-            strcat(result,index);
-            strcpy(URI, result);
-          }
-
-          //find  fileExtension
-          char ext[200];
-          strcpy(ext,URI); //preserve original URI
-          token = strtok (ext, "."); //tokenize
-          token = strtok(NULL,"."); //next token
-          fileExtension = token;
-      
-        fprintf(stderr, "request: %s. URI: %s. Type: %s. Ext: %s\n",request,URI,type,fileExtension );
-        }
-
+      strcat(result,"/");
+      strcpy(URI,result);
+    }
+    
+    fileExtension="html";
+    closedir(dir);
   }
-   
-  sendHandler(client_sock,URI,fileExtension ); //send file
 
+  else {
+    char ext[200];
+    strcpy(ext,URI); //preserve original URI
+    token = strtok (ext, "."); //tokenize
+    token = strtok(NULL,"."); //next token
+    fileExtension = token;     
+  }
+
+  sendHandler(client_sock,URI,fileExtension ); //send file
+  sprintf(errorMessage,"Requested and Received %s\n",URI);
+  errorHandler(errorMessage);
   return 0;
 } //clientHandler()
-
-
-
 
 
 //START OF MAIN
 int main () {
 
-  //START Demonizing
-  if (fork() != 0){ //process dies if not child
+  //START Demonizing process
+  if (fork() != 0){ //process dies if it`s not the child
     raise(SIGSTOP);
     exit(0);
   }
       
-  chdir("/var/www");  //First change work drectory
-  chroot("/var/www"); //then chroot
-
-  setsid(); //not attached to the terminal
+  chdir("/var/www");    //First change work drectory
+  chroot("/var/www");   //then we chroot
+  setsid();   //not attached to the terminal
 
   signal(SIGTTOU,SIG_IGN);
   signal(SIGTTIN,SIG_IGN);
@@ -299,24 +309,16 @@ int main () {
   }
 
   if(fork() != 0){ //END Demonizing
-    //raise(SIGSTOP); //process dies if not child
     exit(0);
   }
- 
-  char per1[] = "dir.html";
-
-  dirfp = open(per1,O_CREAT | O_WRONLY | O_TRUNC,00777);
-  dup2(dirfp,1);
 
   mkdir("log/", 00777); // create log directory if it does not exist
   char per[] = "log/webserver.log"; //relative to chroot directory
 
-
-
   fd = open(per,O_APPEND | O_CREAT | O_WRONLY,00777);
-  dup2(fd,2); //STDERR points to log file
+  dup2(fd,2); //dup STDERR our to log file
       
-  //Setter opp socket-strukturen
+  //Settting uo our socket
   sd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 
   //Prevent system from holding on to a port after termination.
@@ -329,7 +331,6 @@ int main () {
   
   //Binds socket and local address
   if ( 0==bind(sd, (struct sockaddr *)&lok_adr, sizeof(lok_adr))  ){
-  
    sprintf(errorMessage,"Webserver has pid: %d and is using port %d.\n\n", getpid(), PORT);
    errorHandler((char *) errorMessage);
   }
@@ -340,48 +341,36 @@ int main () {
   }
 
   /*
-  Drop our Root privileges after bind to port 80
+  Now we drop our Root privileges after we bound to port 80
   */
 
   if (getuid() == 0) { // process is running as root, drop privileges
-  if (setgid(964) != 0);
-  // fatal("setgid: Unable to drop group privileges: %s", strerror(errno));
-  if (setuid(964) != 0);
-  // fatal("setuid: Unable to drop user privileges: %S", strerror(errno));
+    setgid(964);
+    setuid(964);
+  }
 
   //Waiting for incoming connection
   listen(sd, BAK_LOGG);
-
   while(1){ 
-
-    //Accepts incoming connection
+    
+    //Accept incoming connection
     client_sock = accept(sd, (struct sockaddr *)&client_addr, &addr_len);    
-
+    
     if(fork() == 0 ) {
-  
-    //Log client requests
-    errorHandler("New request\n");
+      errorHandler("New request\n");   //Log all new requests
+      clienthandler(client_sock);     //Receive and answer to our clients requests
+      shutdown(client_sock, SHUT_RDWR);   //Close socket and free fd space
+      errorHandler("connection closed\n\n");  //Log the closed connection
     
-    //Receive and answer to clients requests
-    clienthandler(client_sock);
-
-    //Close socket and free fd space
-    shutdown(client_sock, SHUT_RDWR);
-
-    //Log closed connections
-    errorHandler("connection closed\n\n");
-    
-    exit(0);   
+      exit(0);   
     }//fork()
-
       
-    //The system ignores the signal given by the child upon termination and no zombie is created.
+    //The system ignores the signal given by the child upon termination so no zombie is created.
     signal(SIGCHLD,SIG_IGN); 
 
-    //The parent process closes the filedescriptor and returns to wait for incoming connections.
+    //The parent process closes the socket filedescriptor and returns to wait for incoming connections.
     close(client_sock);
   }//while
 
-  return 0;
-  } 
+  return 1; //should never go here 
 } //main()
