@@ -2,7 +2,7 @@
 
 A simple webserver written in C, created as a school project.
 
-Markup : * The name flaskehals was chosen in lack of a better name, it`s norwegian for bottle neck :) 
+* The name flaskehals was chosen in lack of a better name, it`s norwegian for bottle neck :) 
 
 -->The server runs in a Docker built from a scratch image with the /var/www directory inside docker mountet from the host (opt/www). It uses namespaces for added security and cgroups to limit the CPU usage and chroots to /var/ww inside the container, these were also requirements from the project.
 
