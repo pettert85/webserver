@@ -1,5 +1,4 @@
 # webserver
- HEAD
 A simple webserver written in C, created as a school project.
 
 * The name flaskehals was chosen in lack of a better name, it`s norwegian for bottle neck :) 
@@ -15,4 +14,3 @@ This was a requirerment in our project and not something one would want to use i
 * The server handles 404 Not Found aswell, with a correct header response and an HTML file sent back to the client.
 
 **Note that We had to keep the www directory to be mounted in the Docker in /opt/www on the host system to avoid some permission issues on Arch Linux, This did not seem to be a problem in Linux Mint though.**
-84473af65232829ac9d6ac0fc73ad81e2ce6d2d6
