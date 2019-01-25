@@ -1,19 +1,26 @@
 <html>
-	<script src="/include.js"></script>
-<head><title>WebSite</title>
+
+<head><title>CGI test</title>
 <link rel="stylesheet" type="text/css" href="/styles.css">
 </head>
 <body bgcolor="556B2F">
 <center>
-<h1>Welcome to our website!</h1>
-
-<p>click <a href="html/info.asis">here</a> for more information in plain text</p>
+<h1>CGI POST and GET test!</h1>
 
 <table cellspacing="20">
 	<tr>
 		<td><p id="para"><img src="/images/tux.png" height="150px"></p></td>
 		<td><p id="para">
 			Q. What is the biggest lie in the entire universe? A. I have read and agree to the Terms and Conditions.</p></td></tr></table>
+POST: <form action="localhost:8080/cgi-bin/hallo_2.cgi" method="post">
+	<input type="text" name="navn">
+	<input type="submit">
+</form>
+
+GET: <form action="localhost:8080/cgi-bin/hallo_2.cgi" method="get">
+	<input type="text" name="navn">
+	<input type="submit">
+</form>
 </center>
 </body>
 </html>
