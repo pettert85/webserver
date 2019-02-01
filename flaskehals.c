@@ -57,6 +57,15 @@ docker run -p 80:80 --name web -v www:/var/www --cpus 0.1  USERNAME/webserver (0
 docker stats -> viser bruken
 a4c566f337b95d4db43855bf58214286c20b3693
 
+DOCKER NETWORKING:
+docker network create mynet <--- lager nytt netverk
+docker run -itd --network=mynet busybox <--- starter docker med --network=mynet
+
+dette gjør at flere containere kommer på sammme nett og kan referere til hverandre med f.eks curl slik:
+curl -X GET http://navnpåkontainer:8888/forfatter
+
+på denne måten slipper man å forholde seg til docker ipadresser som endres fra gang til gang når containerne starter
+
 */
 
 #include <arpa/inet.h>
