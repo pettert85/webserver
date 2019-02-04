@@ -1,0 +1,5 @@
+<!ELEMENT forfatter (forfatterid,fornavn,etternavn,nasjonalitet)>
+<!ELEMENT forfatterid (#PCDATA)>
+<!ELEMENT fornavn (#PCDATA)>
+<!ELEMENT etternavn (#PCDATA)>
+<!ELEMENT nasjonalitet (#PCDATA)>
