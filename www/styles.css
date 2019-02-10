@@ -38,3 +38,40 @@ h1 {
   text-align: center;
   vertical-align: middle;
 }
+
+#demo tr:nth-child(even){background-color: #f2f2f2;}
+
+#demo tr:hover {background-color: #ddd;}
+
+#demo td {width="80%"; text-align: left; vertical-align: top;}
+
+#demo {
+  font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+  border-collapse: collapse;
+  border: 1px solid black;
+  width: 95%;
+}
+
+#demo th {
+  padding-top: 12px;
+  padding-bottom: 12px;
+  text-align: left;
+  background-color: #404040;
+  color: white;
+  }
+
+input[type=text] {
+  border: 1px solid darkgrey;
+  border-radius: 4px;
+  background-color: lightgrey;
+}
+
+input[type=button], input[type=submit],input[type=button], input[type=reset] {
+  background-color: red;
+  border: none;
+  color: white;
+  padding: 2px 2px;
+  text-decoration: none;
+  margin: 4px 2px;
+  cursor: pointer;
+}
