@@ -23,7 +23,7 @@
 	<tr>
 		<td align="right">&nbsp;</td>
 		<td align="right width="30px">
-			<button type="button" onclick="logIn(bruker.value, pass.value)">Login</button>
+			<button type="button" onclick="login(bruker.value, pass.value)">Login</button>
 			<input type="submit" name="POST" value="Logout"></td>
 	</tr>
 </table></form>
@@ -196,28 +196,34 @@ function boktabell(xml) {
   document.getElementById("demo").innerHTML = table;
 }
 
+</script>
 
-<!-- Login -->
+<script>
+function login(bNavn, pass) {
+    var hash = CryptoJs.MD5(pass);
+//  var xml =  "<?xml version="1.0" encoding="UTF-8"?><login><brukernavn>"+bNavn+"</brukernavn><passord>"+pass+"</passord></login>"
+  console.log("JAeg er i login og bruker er: " +bNavn+" og passordet er: "+hash);
 
-function logIn(bNavn, pass){
-  var passHash = parseInt(md5(pass));
-  console.log("Bruker = "+bNavn);
-  console.log("Password hash= "+passHash);
-  var xhhtp = new XMLHttpRequest();
-  var xml="<?xml version="1.0" encoding="UTF-8"?><login><brukernavn>"+bNavn+"</brukernavn><passord>"+passHash+"</passord></login>";
-  xhttp.onreadystatechange = funciton() {
+/*   
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
     if (this.readyState == 4 && this.status == 200) {
       logon(this);
     }
   };
-  xhttp.setRequestHeader("Content-Type", "text/xml" );
-  xhttp.open("POST", "http://bp:8888/login/", true);
-  xhttp.send(xml)
+  xhttp.open("POST", "http://bp:8888/login/", false);
+  xhttp.send(xml);
 }
-function logon(cookie){
- console.log("Få tilbake og sette cookie her!" + cookie);
-}
-</script>
+function logon(xml) {
+  console.log("Jeg er i logon! responseXML = "+xml.responseXML; 
+  var xmlDoc = xml.responseXML; 
+  }	
+  document.getElementById("demo").innerHTML = "Velkommen "+bruker+"!";
+*/
 
+}
+<!-- Login -->
+
+</script
 </body>
 </html>	
