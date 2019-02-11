@@ -23,7 +23,7 @@
 	<tr>
 		<td align="right">&nbsp;</td>
 		<td align="right width="30px">
-			<input type="submit" name="POST" value="Login">
+			<button type="button" onclick="logIn(bruker.value, pass.value)">Login</button>
 			<input type="submit" name="POST" value="Logout"></td>
 	</tr>
 </table></form>
@@ -33,14 +33,14 @@
 		<td>
 			Hent en forfatter: <form method="get">
 			<input type="text" placeholder="ID" name="forfatterID">
-			<input type="submit" value="Hent en" name="en">
+			<button type="button" onclick="getEnForfatter(forfatterID.value)">Hent en</button>
 			<button type="button" onclick="loadDoc()">Hent alle</button>
 			</form></td>
 		<td>
 			Hent en bok: <form method="get">
 			<input type="text" placeholder="ID" name="bokID">
-			<input type="submit" value="Hent en" name="en">
-			<input type="submit" value="Hent alle" name="alle">
+			<button type="button" onclick="getOneBook(bokID.value)" >Hent en</button>
+			<button type="button" onclick="getAllBooks()">Hent alle</button>
 			</form></td></tr>
 <tr>
 		<td>
@@ -69,12 +69,13 @@
 	<td>&nbsp;</td>
 </tr></table>
 
+
 <!-- Ajax functions -->
+
+<script>
 
 <!-- Alle forfattere -->
 
-
-<script>
 function loadDoc() {
   var xhttp = new XMLHttpRequest();
   xhttp.onreadystatechange = function() {
@@ -102,6 +103,119 @@ function myFunction(xml) {
     "</td></tr>";
   }	
   document.getElementById("demo").innerHTML = table;
+}
+
+<!-- En forfatter -->
+
+function getEnForfatter(forfatterId) {
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      myFunction(this);
+    }
+  };
+  xhttp.open("GET", "http://bp:8888/forfatter/"+forfatterId, true);
+  xhttp.send();
+}
+function myFunction(xml) {
+  var i;
+  var xmlDoc = xml.responseXML;
+  var table="<tr><th>ForfatterID</th><th>Fornavn</th><th>Etternavn</th><th>Najonalitet</th></tr>";
+  var x = xmlDoc.getElementsByTagName("forfatter");
+  for (i = 0; i <x.length; i++) { 
+    table += "<tr><td>" +
+    x[i].getElementsByTagName("forfatterid")[0].childNodes[0].nodeValue +
+    "</td><td>" +
+    x[i].getElementsByTagName("fornavn")[0].childNodes[0].nodeValue +
+    "</td><td>" +
+    x[i].getElementsByTagName("etternavn")[0].childNodes[0].nodeValue +
+    "</td><td>" +
+    x[i].getElementsByTagName("nasjonalitet")[0].childNodes[0].nodeValue +
+    "</td></tr>";
+  }	
+  document.getElementById("demo").innerHTML = table;
+}
+
+
+<!-- Alle boker -->
+
+function getAllBooks() {
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      boktabell(this);
+    }
+  };
+  xhttp.open("GET", "http://bp:8888/bok/", true);
+  xhttp.send();
+}
+function boktabell(xml) {
+  var i;
+  var xmlDoc = xml.responseXML;
+  var table="<tr><th>BokId</th><th>Tittel</th><th>ForfatterId</th>";
+  var x = xmlDoc.getElementsByTagName("bok");
+  for (i = 0; i <x.length; i++) { 
+    table += "<tr><td>" +
+    x[i].getElementsByTagName("bokid")[0].childNodes[0].nodeValue +
+    "</td><td>" +
+    x[i].getElementsByTagName("tittel")[0].childNodes[0].nodeValue +
+    "</td><td>" +
+    x[i].getElementsByTagName("forfatterid")[0].childNodes[0].nodeValue +
+    "</td></tr>";
+  }	
+  document.getElementById("demo").innerHTML = table;
+}
+
+
+<!-- En bok -->
+
+function getOneBook(bokId) {
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      boktabell(this);
+    }
+  };
+  xhttp.open("GET", "http://bp:8888/bok/"+bokId, true);
+  xhttp.send();
+}
+function boktabell(xml) {
+  var i;
+  var xmlDoc = xml.responseXML;
+  var table="<tr><th>BokId</th><th>Tittel</th><th>ForfatterId</th>";
+  var x = xmlDoc.getElementsByTagName("bok");
+  for (i = 0; i <x.length; i++) { 
+    table += "<tr><td>" +
+    x[i].getElementsByTagName("bokid")[0].childNodes[0].nodeValue +
+    "</td><td>" +
+    x[i].getElementsByTagName("tittel")[0].childNodes[0].nodeValue +
+    "</td><td>" +
+    x[i].getElementsByTagName("forfatterid")[0].childNodes[0].nodeValue +
+    "</td></tr>";
+  }	
+  document.getElementById("demo").innerHTML = table;
+}
+
+
+<!-- Login -->
+
+function logIn(bNavn, pass){
+  var passHash = parseInt(md5(pass));
+  console.log("Bruker = "+bNavn);
+  console.log("Password hash= "+passHash);
+  var xhhtp = new XMLHttpRequest();
+  var xml="<?xml version="1.0" encoding="UTF-8"?><login><brukernavn>"+bNavn+"</brukernavn><passord>"+passHash+"</passord></login>";
+  xhttp.onreadystatechange = funciton() {
+    if (this.readyState == 4 && this.status == 200) {
+      logon(this);
+    }
+  };
+  xhttp.setRequestHeader("Content-Type", "text/xml" );
+  xhttp.open("POST", "http://bp:8888/login/", true);
+  xhttp.send(xml)
+}
+function logon(cookie){
+ console.log("Få tilbake og sette cookie her!" + cookie);
 }
 </script>
 
