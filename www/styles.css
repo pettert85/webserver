@@ -39,20 +39,23 @@ h1 {
   vertical-align: middle;
 }
 
-#demo tr:nth-child(even){background-color: #f2f2f2;}
+#forfatter tr:nth-child(even){background-color: #f2f2f2;}
+#bok tr:nth-child(even){background-color: #f2f2f2;}
 
-#demo tr:hover {background-color: #ddd;}
 
-#demo td {width="80%"; text-align: left; vertical-align: top;}
+#forfatter tr:hover {background-color: #ddd;}
+#bok tr:hover {background-color: #ddd;}
 
-#demo {
+#forfatter td,#bok td {width="80%"; text-align: left; vertical-align: top;}
+
+#forfatter,#bok {
   font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
   border-collapse: collapse;
   border: 1px solid black;
   width: 95%;
 }
 
-#demo th {
+#forfatter th, #bok th {
   padding-top: 12px;
   padding-bottom: 12px;
   text-align: left;
@@ -66,7 +69,7 @@ input[type=text] {
   background-color: lightgrey;
 }
 
-input[type=button], input[type=submit],input[type=button], input[type=reset] {
+button[type=button],input[type=button],input[type=submit],input[type=reset] {
   background-color: red;
   border: none;
   color: white;
