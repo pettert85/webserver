@@ -7,7 +7,7 @@
 
 <body>
 
-<h1>AJAX</h1>
+<h1 id="overskrift">Velkommen</h1>
 
 <form method="post">
 <table width="100%">
@@ -131,14 +131,19 @@ function bookTable(xml) {
 }
 </script>
 
-<script>
 <!-- LOGIN -->
+<script>
 
 function login(bNavn, pass) {
 var hash = MD5(pass);
 console.log("Jeg er i login, bruker er: "+bNavn+" og passord er "+hash);
+
+
 var xml =  "<?xml version=\"1.0\" encoding=\"UTF-8\"?><login><brukernavn>"+bNavn+"</brukernavn><passord>"+hash+"</passord></login>";
-  
+
+/*
+  var xml =  "<?xml version=\"1.0\" encoding=\"UTF-8\"?><login><brukernavn>Petter</brukernavn><passord>c4da71e67e68d4e2dd6bdac02de57d45</passord></login>";
+  */
   var xhttp = new XMLHttpRequest();
 
   xhttp.onreadystatechange = function() {
@@ -152,9 +157,10 @@ var xml =  "<?xml version=\"1.0\" encoding=\"UTF-8\"?><login><brukernavn>"+bNavn
 }
 
 function logon(xml) {
-  console.log("Jeg er i logon! responseXML = "+xml.responseXML); 
-  var xmlDoc = xml.responseXML; 	
-  document.getElementById("overskrift").innerHTML = "Velkommen ";
+  var xmlDoc = xml.responseXML;
+  var x = xmlDoc.getElementsByTagName("login");
+  var bNavn =x[0].getElementsByTagName("bruker")[0].childNodes[0].nodeValue;
+  document.getElementById("overskrift").innerHTML = "Velkommen " + bNavn ;
 
 }
 
