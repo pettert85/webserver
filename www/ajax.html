@@ -169,12 +169,8 @@ function logout(){
       document.getElementById("overskrift").innerHTML = "Logget av!";
     }
   };
-
-/*
-MÅ plukke ut sessionID fra kaka med document.cookie eller noe og sende tilbake i xmlformat!!!
-*/
-
-  xhttp.open("POST", "http://bp:8888/logout/", true);
+  
+  xhttp.open("GET", "http://bp:8888/logout/", true);
   xhttp.setRequestHeader('Content-type', 'text/xml');
   xhttp.withCredentials = true; //må sendes for at kake skal kunne lagres!!!!!
   xhttp.send(null);
