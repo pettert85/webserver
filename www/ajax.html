@@ -23,8 +23,8 @@
 	<tr>
 		<td align="right">&nbsp;</td>
 		<td align="right width="30px">
-			<button type="button" onclick="login(bruker.value, pass.value)">Login</button>
-			<input type="submit" name="POST" value="Logout"></td>
+		      <button type="button" onclick="login(bruker.value, pass.value)">Login</button>
+		      <button type="button" onclick="logout()">Logout</button></td>
 	</tr>
 </table></form>
 
@@ -141,9 +141,6 @@ console.log("Jeg er i login, bruker er: "+bNavn+" og passord er "+hash);
 
 var xml =  "<?xml version=\"1.0\" encoding=\"UTF-8\"?><login><brukernavn>"+bNavn+"</brukernavn><passord>"+hash+"</passord></login>";
 
-/*
-  var xml =  "<?xml version=\"1.0\" encoding=\"UTF-8\"?><login><brukernavn>Petter</brukernavn><passord>c4da71e67e68d4e2dd6bdac02de57d45</passord></login>";
-  */
   var xhttp = new XMLHttpRequest();
 
   xhttp.onreadystatechange = function() {
@@ -153,6 +150,7 @@ var xml =  "<?xml version=\"1.0\" encoding=\"UTF-8\"?><login><brukernavn>"+bNavn
   };
   xhttp.open("POST", "http://bp:8888/login/", true);
   xhttp.setRequestHeader('Content-type', 'text/xml');
+  xhttp.withCredentials = true; //må sendes for at kake skal kunne lagres!!!!!
   xhttp.send(xml);
 }
 
@@ -161,9 +159,26 @@ function logon(xml) {
   var x = xmlDoc.getElementsByTagName("login");
   var bNavn =x[0].getElementsByTagName("bruker")[0].childNodes[0].nodeValue;
   document.getElementById("overskrift").innerHTML = "Velkommen " + bNavn ;
-
 }
 
+function logout(){
+ var xhttp = new XMLHttpRequest();
+
+  xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      document.getElementById("overskrift").innerHTML = "Logget av!";
+    }
+  };
+
+/*
+MÅ plukke ut sessionID fra kaka med document.cookie eller noe og sende tilbake i xmlformat!!!
+*/
+
+  xhttp.open("POST", "http://bp:8888/logout/", true);
+  xhttp.setRequestHeader('Content-type', 'text/xml');
+  xhttp.withCredentials = true; //må sendes for at kake skal kunne lagres!!!!!
+  xhttp.send(null);
+}
 
 /**
 *
