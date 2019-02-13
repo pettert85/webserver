@@ -46,21 +46,21 @@
 			<input type="text" placeholder="ID" name="forfatterID">
 			<input type="text" placeholder="Fornavn" name="fornavn">
 			<input type="text" placeholder="Etternavn" name="etternavn">
-			<input type="text" placeholder="NOR" name="najonalitet">
-			<input type="submit" value="Legg til" name="POST">
-			<input type="submit" value="Endre" name="PUT">
-			<input type="submit" value="Slett" name="DELETE">
-			<input type="submit" value="Slett alle" name="DELETEALL">
+			<input type="text" placeholder="NOR" name="nasjonalitet">
+			<button type="button" onclick="postAuthor(forfatterID.value, fornavn.value, etternavn.value, nasjonalitet.value)">Legg til</button>
+			<button type="button" onclick="putAuthor(forfatterID.value, fornavn.value, etternavn.value, nasjonalitet.value)">Endre</button>
+			<button type="button" onclick="deleteOneAuthor(forfatterID.value, fornavn.value, etternavn.value, nasjonalitet.value)">Slett</button>
+			<button type="button" onclick="deleteAllAuthors()">Slett alle</button>
 			</form></td>
 <td>
 			Legg til/endre/slett bok: <form method="post">
 			<input type="text" placeholder="BokID" name="bokID">
 			<input type="text" placeholder="Tittel" name="tittel">
 			<input type="text" placeholder="ForfatterID" name="forfatterID">
-			<input type="submit" value="Legg til" name="POST">
-			<input type="submit" value="Endre" name="PUT">
-			<input type="submit" value="Slett" name="DELETE">
-			<input type="submit" value="Slett alle" name="DELETEALL">
+			<button type="button" onclick="postBook(bokID.value, tittel.value, forfatterID.value)">Legg til</button>
+			<button type="button" onclick="putBook(bokID.value, tittel.value, forfatterID.value)">Endre</button>		
+			<button type="button" onclick="deleteOneBook(bokID.value, tittel.value, forfatterID.value)">Slett</button>
+			<button type="button" onclick="deleteAllBooks()">Slett alle</button>
 </form></td></tr>
 <tr>
 	<td valign="top"><table id="forfatter" width="100%"></table></td>
@@ -101,6 +101,101 @@ function authorTable(xml) {
 }
 </script>
 
+<!-- Legg til forfatter -->
+<script>
+function postAuthor(fId, fNavn, eNavn, nasjonalitet){
+ console.log("addAuthor: "+fId+", "+fNavn+", "+eNavn+", "+nasjonalitet);
+ var sendXml;
+ sendXml = "<?xml version=1.0 encoding=UTF-8?><forfatter><forfatterID>"+fId+
+ "</forfatterID><fornavn>"+fNavn+
+ "</fornavn><etternavn>"+eNavn+
+ "</etternavn><nasjonalitet>"+nasjonalitet+"</nasjonalitet></forfatter>";
+ var xhttp = new XMLHttpRequest();
+ xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      postAuthTable(this);
+    }
+ };
+ xhttp.open("POST", "http://bp:8888/forfatter/" + fId, true);
+ xhttp.setRequestHeader('Content-type', 'text/xml');
+ xhttp.withCredentials = true;
+ xhttp.send(sendXml);	
+}
+function postAuthTable(resp){
+ response = resp.responseText;
+ document.getElementById("forfatter").innerHTML = response;
+}
+</script>
+
+<!-- Endre forfatter -->
+<script>
+function putAuthor(fId, fNavn, eNavn, nasjonalitet){
+ var sendXml = "<?xml version=1.0 encoding=UTF-8?><forfatter><forfatterID>"+fId+
+ "</forfatterID><fornavn>"+fNavn+
+ "</fornavn><etternavn>"+eNavn+
+ "</etternavn><nasjonalitet>"+nasjonalitet+"</nasjonalitet></forfatter>";
+ var xhttp = new XMLHttpRequest();
+ xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      putAuthTable(this);
+    }
+ };
+ xhttp.open("PUT", "http://bp:8888/forfatter/" + fId, true);
+ xhttp.setRequestHeader('Content-type', 'text/xml');
+ xhttp.withCredentials = true;
+ xhttp.send(sendXml);	
+}
+function putAuthTable(resp){
+ response = resp.responseText;
+ document.getElementById("forfatter").innerHTML = response;
+}
+</script>
+
+
+<!-- Slette en forfatter -->
+<script>
+function deleteOneAuthor(fId, fNavn, eNavn, nasjonalitet){
+ var sendXml = "<?xml version=1.0 encoding=UTF-8?><forfatter><forfatterID>"+fId+
+ "</forfatterID><fornavn>"+fNavn+
+ "</fornavn><etternavn>"+eNavn+
+ "</etternavn><nasjonalitet>"+nasjonalitet+"</nasjonalitet></forfatter>";
+ var xhttp = new XMLHttpRequest();
+ xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      putAuthTable(this);
+    }
+ };
+ xhttp.open("DELETE", "http://bp:8888/forfatter/" + fId, true);
+ xhttp.setRequestHeader('Content-type', 'text/xml');
+ xhttp.withCredentials = true;
+ xhttp.send(sendXml);	
+}
+function putAuthTable(resp){
+ response = resp.responseText;
+ document.getElementById("forfatter").innerHTML = response;
+}
+</script>
+
+<!-- Slette alle forfattere -->
+<script>
+function deleteAllAuthors(){
+ var xhttp = new XMLHttpRequest();
+ xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      putAuthTable(this);
+    }
+ };
+ xhttp.open("DELETE", "http://bp:8888/forfatter", true);
+ xhttp.setRequestHeader('Content-type', 'text/xml');
+ xhttp.withCredentials = true;
+ xhttp.send();	
+}
+function putAuthTable(resp){
+ response = resp.responseText;
+ document.getElementById("forfatter").innerHTML = response;
+}
+</script>
+
 <!-- En eller alle boker -->
 <script>
 function book(bokID) {
@@ -130,6 +225,96 @@ function bookTable(xml) {
   document.getElementById("bok").innerHTML = table;
 }
 </script>
+
+<!-- Legg til bok -->
+<script>
+function postBook(bId, tittel, fId){
+ var sendXml = "<?xml version=1.0 encoding=UTF-8?><bok><bokID>"+bId+
+ "</bokID><tittel>"+tittel+
+ "</tittel><forfatterID>"+fId+"</forfatterID>></bok>";
+ var xhttp = new XMLHttpRequest();
+ xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      postBookTable(this);
+    }
+ };
+ xhttp.open("POST", "http://bp:8888/bok/" + bId, true);
+ xhttp.setRequestHeader('Content-type', 'text/xml');
+ xhttp.withCredentials = true;
+ xhttp.send(sendXml);	
+}
+function postBookTable(resp){
+ response = resp.responseText;
+ document.getElementById("bok").innerHTML = response;
+}
+</script>
+
+<!-- Endre bok -->
+<script>
+function putBook(bId, tittel, fId){
+ var sendXml = "<?xml version=1.0 encoding=UTF-8?><bok><bokID>"+bId+
+ "</bokID><tittel>"+tittel+
+ "</tittel><forfatterID>"+fId+"</forfatterID>></bok>";
+ var xhttp = new XMLHttpRequest();
+ xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      putBookTable(this);
+    }
+ };
+ xhttp.open("PUT", "http://bp:8888/bok/" + bId, true);
+ xhttp.setRequestHeader('Content-type', 'text/xml');
+ xhttp.withCredentials = true;
+ xhttp.send(sendXml);	
+}
+function putBookTable(resp){
+ response = resp.responseText;
+ document.getElementById("bok").innerHTML = response;
+}
+</script>
+
+<!-- Slette en bok -->
+<script>
+function deleteOneBook(bId, tittel, fId){
+ var sendXml = "<?xml version=1.0 encoding=UTF-8?><bok><bokID>"+bId+
+ "</bokID><tittel>"+tittel+
+ "</tittel><forfatterID>"+fId+"</forfatterID>></bok>";
+ var xhttp = new XMLHttpRequest();
+ xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      deleteOneBookTable(this);
+    }
+ };
+ xhttp.open("DELETE", "http://bp:8888/bok/" + bId, true);
+ xhttp.setRequestHeader('Content-type', 'text/xml');
+ xhttp.withCredentials = true;
+ xhttp.send(sendXml);	
+}
+function deleteOneBookTable(resp){
+ response = resp.responseText;
+ document.getElementById("bok").innerHTML = response;
+}
+</script>
+
+<!-- Slett alle boker -->
+<script>
+function deleteAllBooks(){
+ var xhttp = new XMLHttpRequest();
+ xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      deleteAllBookTable(this);
+    }
+ };
+ xhttp.open("DELETE", "http://bp:8888/bok", true);
+ xhttp.setRequestHeader('Content-type', 'text/xml');
+ xhttp.withCredentials = true;
+ xhttp.send();	
+}
+function deleteAllBookTable(resp){
+ response = resp.responseText;
+ document.getElementById("bok").innerHTML = response;
+}
+</script>
+
 
 <!-- LOGIN -->
 <script>
@@ -396,5 +581,7 @@ var MD5 = function (string) {
 }
 
 </script>
+
+
 </body>
 </html>	
