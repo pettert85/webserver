@@ -1,0 +1,3 @@
+<!ELEMENT login (brukernavn, passord)>
+<!ELEMENT brukernavn (#PCDATA)>
+<!ELEMENT passord (#PCDATA)>
