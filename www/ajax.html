@@ -9,69 +9,76 @@
 
 <h1 id="overskrift">Velkommen</h1>
 
-<form method="post">
+<form onsubmit="login(bruker.value,pass.value); this.reset(); return false;">
 <table width="100%">
 	<tr>
 		<td align="right">Brukernavn:</td>
-		<td align="right" width="30px"><form method="post" target=”_blank”><input type"text" name="bruker" width="30px"></td>
+		<td align="right" width="30px">
+    <input type"text" name="bruker" width="30px"></td>
 
 	<tr>
 		<td align="right">Passord:</td>
-		<td align="right width="30px""><input type="password" name="pass" width="30px"></form></td>
+		<td align="right width="30px""><input type="password" name="pass" width="30px"></td>
 	</tr>
 
 	<tr>
 		<td align="right">&nbsp;</td>
 		<td align="right width="30px">
-		      <button type="button" onclick="login(bruker.value, pass.value)">Login</button>
-		      <button type="button" onclick="logout()">Logout</button></td>
+    <input type="submit" value="Login">
+		<button type="button" onclick="logout()">Logout</button></td>
 	</tr>
 </table></form>
 
 <table cellspacing="20" width="100%">
 	<tr>
 		<td>
-			Hent forfatter med spesifikk ID, eller tom for alle: <form method="get">
+			Hent forfatter med spesifikk ID, eller tom for alle: 
+      <form name="getAuthor" onsubmit="author(forfatterID); this.reset(); return false;">
 			<input type="text" placeholder="ID" name="forfatterID">
-			<button type="button" onclick="author(forfatterID)">Hent</button>
-			</form></td>
+      <input type="submit" value="Hent">
+    			</form></td>
 		<td>
-			Hent en bok med spesifikk id eller tom for alle: <form method="get">
+			Hent en bok med spesifikk id eller tom for alle:
+      <form onsubmit="book(bokID); this.reset(); return false;">
 			<input type="text" placeholder="ID" name="bokID">
-			<button type="button" onclick="book(bokID)" >Hent</button>
+			<input type="submit" value="Hent">
 			</form></td></tr>
 <tr>
 		<td>
-			 Legg til/endre/slett forfatter: <form method="post">
+			 Legg til/endre/slett forfatter:
+      <form name="alterAuthors">
 			<input type="text" placeholder="ID" name="forfatterID">
 			<input type="text" placeholder="Fornavn" name="fornavn">
 			<input type="text" placeholder="Etternavn" name="etternavn">
 			<input type="text" placeholder="NOR" name="nasjonalitet">
-			<button type="button" onclick="postAuthor(forfatterID.value, fornavn.value, etternavn.value, nasjonalitet.value)">Legg til</button>
-			<button type="button" onclick="putAuthor(forfatterID.value, fornavn.value, etternavn.value, nasjonalitet.value)">Endre</button>
-			<button type="button" onclick="deleteOneAuthor(forfatterID.value, fornavn.value, etternavn.value, nasjonalitet.value)">Slett</button>
-			<button type="button" onclick="deleteAllAuthors()">Slett alle</button>
+			<button type="button" onclick="postAuthor(forfatterID.value, fornavn.value, etternavn.value, nasjonalitet.value); alterAuthors.reset();">Legg til</button>
+			<button type="button" onclick="putAuthor(forfatterID.value, fornavn.value, etternavn.value, nasjonalitet.value);  alterAuthors.reset();">Endre</button>
+			<button type="button" onclick="deleteOneAuthor(forfatterID.value, fornavn.value, etternavn.value, nasjonalitet.value);  alterAuthors.reset();">Slett</button>
+			<button type="button" onclick="deleteAllAuthors(); alterAuthors.reset();">Slett alle</button>
 			</form></td>
 <td>
-			Legg til/endre/slett bok: <form method="post">
+			Legg til/endre/slett bok: 
+      <form name="alterBooks">
 			<input type="text" placeholder="BokID" name="bokID">
 			<input type="text" placeholder="Tittel" name="tittel">
 			<input type="text" placeholder="ForfatterID" name="forfatterID">
-			<button type="button" onclick="postBook(bokID.value, tittel.value, forfatterID.value)">Legg til</button>
-			<button type="button" onclick="putBook(bokID.value, tittel.value, forfatterID.value)">Endre</button>		
-			<button type="button" onclick="deleteOneBook(bokID.value, tittel.value, forfatterID.value)">Slett</button>
-			<button type="button" onclick="deleteAllBooks()">Slett alle</button>
+			<button type="button" onclick="postBook(bokID.value, tittel.value, forfatterID.value); alterBooks.reset();">Legg til</button>
+			<button type="button" onclick="putBook(bokID.value, tittel.value, forfatterID.value); alterBooks.reset();">Endre</button>		
+			<button type="button" onclick="deleteOneBook(bokID.value, tittel.value, forfatterID.value); alterBooks.reset();">Slett</button>
+			<button type="button" onclick="deleteAllBooks(); alterBooks.reset();">Slett alle</button>
 </form></td></tr>
 <tr>
-	<td valign="top"><table id="forfatter" width="100%"></table></td>
-	<td valign="top"><table id="bok" width="100%"></table></td>
-</tr></table>
+	<td valign="top"><table id="forfatter" width="100%"></table>
+    <div id="responseAuthor"></td>
+	<td valign="top"><table id="bok" width="100%"></table>
+  <div id="responseBook"></td></tr></table>
 
 
 <!-- Ajax functions -->
 <!-- En eller alle forfattere -->
 <script>
 function author(forfatterID) {
+
   var xhttp = new XMLHttpRequest();
   xhttp.onreadystatechange = function() {
     if (this.readyState == 4 && this.status == 200) {
@@ -123,7 +130,7 @@ function postAuthor(fId, fNavn, eNavn, nasjonalitet){
 }
 function postAuthTable(resp){
  response = resp.responseText;
- document.getElementById("forfatter").innerHTML = response;
+ document.getElementById("responseAuthor").innerHTML = response;
 }
 </script>
 
@@ -147,7 +154,7 @@ function putAuthor(fId, fNavn, eNavn, nasjonalitet){
 }
 function putAuthTable(resp){
  response = resp.responseText;
- document.getElementById("forfatter").innerHTML = response;
+ document.getElementById("responseAuthor").innerHTML = response;
 }
 </script>
 
@@ -172,7 +179,7 @@ function deleteOneAuthor(fId, fNavn, eNavn, nasjonalitet){
 }
 function putAuthTable(resp){
  response = resp.responseText;
- document.getElementById("forfatter").innerHTML = response;
+ document.getElementById("responseAuthor").innerHTML = response;
 }
 </script>
 
@@ -192,7 +199,7 @@ function deleteAllAuthors(){
 }
 function putAuthTable(resp){
  response = resp.responseText;
- document.getElementById("forfatter").innerHTML = response;
+ document.getElementById("responseAuthor").innerHTML = response;
 }
 </script>
 
@@ -245,7 +252,7 @@ function postBook(bId, tittel, fId){
 }
 function postBookTable(resp){
  response = resp.responseText;
- document.getElementById("bok").innerHTML = response;
+ document.getElementById("responseBook").innerHTML = response;
 }
 </script>
 
@@ -268,7 +275,7 @@ function putBook(bId, tittel, fId){
 }
 function putBookTable(resp){
  response = resp.responseText;
- document.getElementById("bok").innerHTML = response;
+ document.getElementById("responseBook").innerHTML = response;
 }
 </script>
 
@@ -291,7 +298,7 @@ function deleteOneBook(bId, tittel, fId){
 }
 function deleteOneBookTable(resp){
  response = resp.responseText;
- document.getElementById("bok").innerHTML = response;
+ document.getElementById("responseBook").innerHTML = response;
 }
 </script>
 
@@ -311,7 +318,7 @@ function deleteAllBooks(){
 }
 function deleteAllBookTable(resp){
  response = resp.responseText;
- document.getElementById("bok").innerHTML = response;
+ document.getElementById("responseBook").innerHTML = response;
 }
 </script>
 
