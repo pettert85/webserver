@@ -78,7 +78,6 @@
 <!-- En eller alle forfattere -->
 <script>
 function author(forfatterID) {
-
   var xhttp = new XMLHttpRequest();
   xhttp.onreadystatechange = function() {
     if (this.readyState == 4 && this.status == 200) {
@@ -88,6 +87,7 @@ function author(forfatterID) {
   xhttp.open("GET", "http://bp:8888/forfatter/" + forfatterID.value, true);
   xhttp.send();
 }
+
 function authorTable(xml) {
   var i;
   var xmlDoc = xml.responseXML;
@@ -128,25 +128,30 @@ function postAuthor(fId, fNavn, eNavn, nasjonalitet){
  xhttp.withCredentials = true;
  xhttp.send(sendXml);	
 }
+
 function postAuthTable(resp){
- response = resp.responseText;
- if (response == "true")
-  document.getElementById("responseAuthor").innerHTML = "Forfatteren ble lagt til";
+  response = resp.responseText;
  
- else
+  if (response == "true"){
+  document.getElementById("responseAuthor").innerHTML = "Forfatteren ble lagt til";
+ }
+ 
+  else{
   document.getElementById("responseAuthor").innerHTML = "Du må logge inn!";
+ }
+
 }
 </script>
 
 <!-- Endre forfatter -->
 <script>
 function putAuthor(fId, fNavn, eNavn, nasjonalitet){
- var sendXml = "<?xml version=1.0 encoding=UTF-8?><forfatter><forfatterID>"+fId+
- "</forfatterID><fornavn>"+fNavn+
- "</fornavn><etternavn>"+eNavn+
- "</etternavn><nasjonalitet>"+nasjonalitet+"</nasjonalitet></forfatter>";
- var xhttp = new XMLHttpRequest();
- xhttp.onreadystatechange = function() {
+  var sendXml = "<?xml version=1.0 encoding=UTF-8?><forfatter><forfatterID>"+fId+
+  "</forfatterID><fornavn>"+fNavn+
+  "</fornavn><etternavn>"+eNavn+
+  "</etternavn><nasjonalitet>"+nasjonalitet+"</nasjonalitet></forfatter>";
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
     if (this.readyState == 4 && this.status == 200) {
       putAuthTable(this);
     }
@@ -156,8 +161,10 @@ function putAuthor(fId, fNavn, eNavn, nasjonalitet){
  xhttp.withCredentials = true;
  xhttp.send(sendXml);	
 }
+
 function putAuthTable(resp){
  response = resp.responseText;
+ 
  if (response == "true")
   document.getElementById("responseAuthor").innerHTML = "Forfatteren ble endret";
  
@@ -381,8 +388,15 @@ var xml =  "<?xml version=\"1.0\" encoding=\"UTF-8\"?><login><brukernavn>"+bNavn
 function logon(xml) {
   var xmlDoc = xml.responseXML;
   var x = xmlDoc.getElementsByTagName("login");
-  var bNavn =x[0].getElementsByTagName("bruker")[0].childNodes[0].nodeValue;
-  document.getElementById("overskrift").innerHTML = "Velkommen " + bNavn ;
+  var status =x[0].getElementsByTagName("status")[0].childNodes[0].nodeValue;
+  
+  if (status == "true"){
+    document.getElementById("overskrift").innerHTML = "Velkommen " + bNavn ;
+  }
+  else{
+    document.getElementById("loginstatus").innerHTML = x.[0].getElementsByTagName("statusMessage")[0].childNodes[0].nodeValue;
+  }
+
 }
 
 function logout(){
