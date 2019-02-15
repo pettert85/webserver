@@ -130,7 +130,11 @@ function postAuthor(fId, fNavn, eNavn, nasjonalitet){
 }
 function postAuthTable(resp){
  response = resp.responseText;
- document.getElementById("responseAuthor").innerHTML = response;
+ if (response == "true")
+  document.getElementById("responseAuthor").innerHTML = "Forfatteren ble lagt til";
+ 
+ else
+  document.getElementById("responseAuthor").innerHTML = "Du må logge inn!";
 }
 </script>
 
@@ -154,7 +158,11 @@ function putAuthor(fId, fNavn, eNavn, nasjonalitet){
 }
 function putAuthTable(resp){
  response = resp.responseText;
- document.getElementById("responseAuthor").innerHTML = response;
+ if (response == "true")
+  document.getElementById("responseAuthor").innerHTML = "Forfatteren ble endret";
+ 
+ else
+  document.getElementById("responseAuthor").innerHTML = "Du må logge inn!";
 }
 </script>
 
@@ -179,7 +187,11 @@ function deleteOneAuthor(fId, fNavn, eNavn, nasjonalitet){
 }
 function putAuthTable(resp){
  response = resp.responseText;
- document.getElementById("responseAuthor").innerHTML = response;
+ if (response == "true")
+  document.getElementById("responseAuthor").innerHTML = "Forfatteren ble slettet";
+ 
+ else
+  document.getElementById("responseAuthor").innerHTML = "Du må logge inn!";
 }
 </script>
 
@@ -199,7 +211,11 @@ function deleteAllAuthors(){
 }
 function putAuthTable(resp){
  response = resp.responseText;
- document.getElementById("responseAuthor").innerHTML = response;
+ if (response == "true")
+  document.getElementById("responseAuthor").innerHTML = "Alle forfattere ble slettet";
+ 
+ else
+  document.getElementById("responseAuthor").innerHTML = "Du må logge inn!";
 }
 </script>
 
@@ -252,7 +268,11 @@ function postBook(bId, tittel, fId){
 }
 function postBookTable(resp){
  response = resp.responseText;
- document.getElementById("responseBook").innerHTML = response;
+ if (response == "true")
+  document.getElementById("responseBook").innerHTML = "Boken ble lagt til";
+ 
+ else
+  document.getElementById("responseBook").innerHTML = "Du må logge inn!";
 }
 </script>
 
@@ -275,7 +295,11 @@ function putBook(bId, tittel, fId){
 }
 function putBookTable(resp){
  response = resp.responseText;
- document.getElementById("responseBook").innerHTML = response;
+ if (response == "true")
+  document.getElementById("responseBook").innerHTML = "Boken ble endret";
+ 
+ else
+  document.getElementById("responseBook").innerHTML = "Du må logge inn!";
 }
 </script>
 
@@ -298,7 +322,11 @@ function deleteOneBook(bId, tittel, fId){
 }
 function deleteOneBookTable(resp){
  response = resp.responseText;
- document.getElementById("responseBook").innerHTML = response;
+ if (response == "true")
+  document.getElementById("responseBook").innerHTML = "Boken ble slettet";
+ 
+ else
+  document.getElementById("responseBook").innerHTML = "Du må logge inn!";
 }
 </script>
 
@@ -318,7 +346,11 @@ function deleteAllBooks(){
 }
 function deleteAllBookTable(resp){
  response = resp.responseText;
- document.getElementById("responseBook").innerHTML = response;
+ if (response == "true")
+  document.getElementById("responseBook").innerHTML = "Alle ble slettet";
+ 
+ else
+  document.getElementById("responseBook").innerHTML = "Du må logge inn!";
 }
 </script>
 
