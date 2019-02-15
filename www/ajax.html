@@ -25,7 +25,8 @@
 		<td align="right">&nbsp;</td>
 		<td align="right width="30px">
     <input type="submit" value="Login">
-		<button type="button" onclick="logout()">Logout</button></td>
+		<button type="button" onclick="logout()">Logout</button>
+    <div id="loginstatus"></td>
 	</tr>
 </table></form>
 
@@ -376,7 +377,7 @@ var xml =  "<?xml version=\"1.0\" encoding=\"UTF-8\"?><login><brukernavn>"+bNavn
 
   xhttp.onreadystatechange = function() {
     if (this.readyState == 4 && this.status == 200) {
-      logon(this);
+      logon(this,bNavn);
     }
   };
   xhttp.open("POST", "http://bp:8888/login/", true);
@@ -385,16 +386,20 @@ var xml =  "<?xml version=\"1.0\" encoding=\"UTF-8\"?><login><brukernavn>"+bNavn
   xhttp.send(xml);
 }
 
-function logon(xml) {
+function logon(xml,bNavn) {
   var xmlDoc = xml.responseXML;
   var x = xmlDoc.getElementsByTagName("login");
   var status =x[0].getElementsByTagName("status")[0].childNodes[0].nodeValue;
-  
+  console.log(status);
+
   if (status == "true"){
     document.getElementById("overskrift").innerHTML = "Velkommen " + bNavn ;
   }
+  
   else{
-    document.getElementById("loginstatus").innerHTML = x.[0].getElementsByTagName("statusMessage")[0].childNodes[0].nodeValue;
+    console.log(x[0].getElementsByTagName("message")[0].childNodes[0].nodeValue);
+    document.getElementById("loginstatus").innerHTML = x[0].getElementsByTagName("message")[0].childNodes[0].nodeValue;
+    setTimeout(functionToDisappearInnerHTML, 5000); //Sets a timer that clears
   }
 
 }
@@ -413,6 +418,11 @@ function logout(){
   xhttp.withCredentials = true; //må sendes for at kake skal kunne lagres!!!!!
   xhttp.send(null);
 }
+
+function functionToDisappearInnerHTML() {
+    document.getElementById("loginstatus").innerHTML = ""; //Clears the innerHTML
+}
+
 
 /**
 *
