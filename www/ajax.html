@@ -112,35 +112,33 @@ function authorTable(xml) {
 <!-- Legg til forfatter -->
 <script>
 function postAuthor(fId, fNavn, eNavn, nasjonalitet){
- console.log("addAuthor: "+fId+", "+fNavn+", "+eNavn+", "+nasjonalitet);
- var sendXml;
- sendXml = "<?xml version=1.0 encoding=UTF-8?><forfatter><forfatterID>"+fId+
- "</forfatterID><fornavn>"+fNavn+
- "</fornavn><etternavn>"+eNavn+
- "</etternavn><nasjonalitet>"+nasjonalitet+"</nasjonalitet></forfatter>";
- var xhttp = new XMLHttpRequest();
- xhttp.onreadystatechange = function() {
+  var sendXml;
+  sendXml = "<?xml version=1.0 encoding=UTF-8?><forfatter><forfatterID>"+fId+
+  "</forfatterID><fornavn>"+fNavn+
+  "</fornavn><etternavn>"+eNavn+
+  "</etternavn><nasjonalitet>"+nasjonalitet+"</nasjonalitet></forfatter>";
+  var xhttp = new XMLHttpRequest();
+  
+  xhttp.onreadystatechange = function() {
     if (this.readyState == 4 && this.status == 200) {
       postAuthTable(this);
     }
- };
- xhttp.open("POST", "http://bp:8888/forfatter/" + fId, true);
- xhttp.setRequestHeader('Content-type', 'text/xml');
- xhttp.withCredentials = true;
- xhttp.send(sendXml);	
+  };
+  
+  xhttp.open("POST", "http://bp:8888/forfatter/" + fId, true);
+  xhttp.setRequestHeader('Content-type', 'text/xml');
+  xhttp.withCredentials = true;
+  xhttp.send(sendXml);	
 }
 
 function postAuthTable(resp){
-  response = resp.responseText;
+  var xmlDoc = resp.responseXML;
+  var x = xmlDoc.getElementsByTagName("response");
+  var status = x[0].getElementsByTagName("status")[0].childNodes[0].nodeValue;
+  var statusMessage = x[0].getElementsByTagName("message")[0].childNodes[0].nodeValue;
  
-  if (response == "true"){
-  document.getElementById("responseAuthor").innerHTML = "Forfatteren ble lagt til";
- }
- 
-  else{
-  document.getElementById("responseAuthor").innerHTML = "Du må logge inn!";
- }
-
+  document.getElementById("responseAuthor").innerHTML = statusMessage;
+  setTimeout(clearResponseAuthor, 3000);
 }
 </script>
 
@@ -152,11 +150,13 @@ function putAuthor(fId, fNavn, eNavn, nasjonalitet){
   "</fornavn><etternavn>"+eNavn+
   "</etternavn><nasjonalitet>"+nasjonalitet+"</nasjonalitet></forfatter>";
   var xhttp = new XMLHttpRequest();
+  
   xhttp.onreadystatechange = function() {
     if (this.readyState == 4 && this.status == 200) {
       putAuthTable(this);
     }
  };
+ 
  xhttp.open("PUT", "http://bp:8888/forfatter/" + fId, true);
  xhttp.setRequestHeader('Content-type', 'text/xml');
  xhttp.withCredentials = true;
@@ -164,13 +164,14 @@ function putAuthor(fId, fNavn, eNavn, nasjonalitet){
 }
 
 function putAuthTable(resp){
- response = resp.responseText;
+  var xmlDoc = resp.responseXML;
+  var x = xmlDoc.getElementsByTagName("response");
+  //var status = x[0].getElementsByTagName("status")[0].childNodes[0].nodeValue;
+  var statusMessage = x[0].getElementsByTagName("message")[0].childNodes[0].nodeValue;
  
- if (response == "true")
-  document.getElementById("responseAuthor").innerHTML = "Forfatteren ble endret";
+  document.getElementById("responseAuthor").innerHTML = statusMessage;
+  setTimeout(clearResponseAuthor, 3000);
  
- else
-  document.getElementById("responseAuthor").innerHTML = "Du må logge inn!";
 }
 </script>
 
@@ -185,7 +186,7 @@ function deleteOneAuthor(fId, fNavn, eNavn, nasjonalitet){
  var xhttp = new XMLHttpRequest();
  xhttp.onreadystatechange = function() {
     if (this.readyState == 4 && this.status == 200) {
-      putAuthTable(this);
+      deleteOneAuthTable(this);
     }
  };
  xhttp.open("DELETE", "http://bp:8888/forfatter/" + fId, true);
@@ -193,13 +194,14 @@ function deleteOneAuthor(fId, fNavn, eNavn, nasjonalitet){
  xhttp.withCredentials = true;
  xhttp.send(sendXml);	
 }
-function putAuthTable(resp){
- response = resp.responseText;
- if (response == "true")
-  document.getElementById("responseAuthor").innerHTML = "Forfatteren ble slettet";
- 
- else
-  document.getElementById("responseAuthor").innerHTML = "Du må logge inn!";
+function deleteOneAuthTable(resp){
+  var xmlDoc = resp.responseXML;
+  var x = xmlDoc.getElementsByTagName("response");
+  //var status = x[0].getElementsByTagName("status")[0].childNodes[0].nodeValue;
+  var statusMessage = x[0].getElementsByTagName("message")[0].childNodes[0].nodeValue;
+  
+  document.getElementById("responseAuthor").innerHTML = statusMessage;
+  setTimeout(clearResponseAuthor, 3000);
 }
 </script>
 
@@ -209,7 +211,7 @@ function deleteAllAuthors(){
  var xhttp = new XMLHttpRequest();
  xhttp.onreadystatechange = function() {
     if (this.readyState == 4 && this.status == 200) {
-      putAuthTable(this);
+      deleteAllAuthTable(this);
     }
  };
  xhttp.open("DELETE", "http://bp:8888/forfatter", true);
@@ -217,14 +219,16 @@ function deleteAllAuthors(){
  xhttp.withCredentials = true;
  xhttp.send();	
 }
-function putAuthTable(resp){
- response = resp.responseText;
- if (response == "true")
-  document.getElementById("responseAuthor").innerHTML = "Alle forfattere ble slettet";
- 
- else
-  document.getElementById("responseAuthor").innerHTML = "Du må logge inn!";
-}
+
+function deleteAllAuthTable(resp){
+  var xmlDoc = resp.responseXML;
+  var x = xmlDoc.getElementsByTagName("response");
+  //var status = x[0].getElementsByTagName("status")[0].childNodes[0].nodeValue;
+  var statusMessage = x[0].getElementsByTagName("message")[0].childNodes[0].nodeValue;
+  
+  document.getElementById("responseAuthor").innerHTML = statusMessage;
+  setTimeout(clearResponseAuthor, 3000);
+} 
 </script>
 
 <!-- En eller alle boker -->
@@ -275,12 +279,14 @@ function postBook(bId, tittel, fId){
  xhttp.send(sendXml);	
 }
 function postBookTable(resp){
- response = resp.responseText;
- if (response == "true")
-  document.getElementById("responseBook").innerHTML = "Boken ble lagt til";
- 
- else
-  document.getElementById("responseBook").innerHTML = "Du må logge inn!";
+  var xmlDoc = resp.responseXML;
+  var x = xmlDoc.getElementsByTagName("response");
+  var status = x[0].getElementsByTagName("status")[0].childNodes[0].nodeValue;
+  var statusMessage = x[0].getElementsByTagName("message")[0].childNodes[0].nodeValue;
+  
+  
+  document.getElementById("responseBook").innerHTML = statusMessage;
+  setTimeout(clearResponseBook, 3000);
 }
 </script>
 
@@ -302,12 +308,13 @@ function putBook(bId, tittel, fId){
  xhttp.send(sendXml);	
 }
 function putBookTable(resp){
- response = resp.responseText;
- if (response == "true")
-  document.getElementById("responseBook").innerHTML = "Boken ble endret";
- 
- else
-  document.getElementById("responseBook").innerHTML = "Du må logge inn!";
+  var xmlDoc = resp.responseXML;
+  var x = xmlDoc.getElementsByTagName("response");
+  var status = x[0].getElementsByTagName("status")[0].childNodes[0].nodeValue;
+  var statusMessage = x[0].getElementsByTagName("message")[0].childNodes[0].nodeValue;
+  
+  document.getElementById("responseBook").innerHTML = statusMessage;
+  setTimeout(clearResponseBook, 3000);
 }
 </script>
 
@@ -329,12 +336,14 @@ function deleteOneBook(bId, tittel, fId){
  xhttp.send(sendXml);	
 }
 function deleteOneBookTable(resp){
- response = resp.responseText;
- if (response == "true")
-  document.getElementById("responseBook").innerHTML = "Boken ble slettet";
- 
- else
-  document.getElementById("responseBook").innerHTML = "Du må logge inn!";
+  var xmlDoc = resp.responseXML;
+  var x = xmlDoc.getElementsByTagName("response");
+  var status = x[0].getElementsByTagName("status")[0].childNodes[0].nodeValue;
+  var statusMessage = x[0].getElementsByTagName("message")[0].childNodes[0].nodeValue;
+  
+
+  document.getElementById("responseBook").innerHTML = statusMessage;
+  setTimeout(clearResponseBook, 3000);
 }
 </script>
 
@@ -353,12 +362,13 @@ function deleteAllBooks(){
  xhttp.send();	
 }
 function deleteAllBookTable(resp){
- response = resp.responseText;
- if (response == "true")
-  document.getElementById("responseBook").innerHTML = "Alle ble slettet";
- 
- else
-  document.getElementById("responseBook").innerHTML = "Du må logge inn!";
+  var xmlDoc = resp.responseXML;
+  var x = xmlDoc.getElementsByTagName("response");
+  var status = x[0].getElementsByTagName("status")[0].childNodes[0].nodeValue;
+  var statusMessage = x[0].getElementsByTagName("message")[0].childNodes[0].nodeValue;
+  
+  document.getElementById("responseBook").innerHTML = statusMessage;
+  setTimeout(clearResponseBook, 3000);
 }
 </script>
 
@@ -367,11 +377,8 @@ function deleteAllBookTable(resp){
 <script>
 
 function login(bNavn, pass) {
-var hash = MD5(pass);
-console.log("Jeg er i login, bruker er: "+bNavn+" og passord er "+hash);
-
-
-var xml =  "<?xml version=\"1.0\" encoding=\"UTF-8\"?><login><brukernavn>"+bNavn+"</brukernavn><passord>"+hash+"</passord></login>";
+  var hash = MD5(pass);
+  var xml =  "<?xml version=\"1.0\" encoding=\"UTF-8\"?><login><brukernavn>"+bNavn+"</brukernavn><passord>"+hash+"</passord></login>";
 
   var xhttp = new XMLHttpRequest();
 
@@ -380,26 +387,26 @@ var xml =  "<?xml version=\"1.0\" encoding=\"UTF-8\"?><login><brukernavn>"+bNavn
       logon(this,bNavn);
     }
   };
+  
   xhttp.open("POST", "http://bp:8888/login/", true);
   xhttp.setRequestHeader('Content-type', 'text/xml');
-  xhttp.withCredentials = true; //må sendes for at kake skal kunne lagres!!!!!
+  xhttp.withCredentials = true; // in order to pass cookies
   xhttp.send(xml);
 }
 
 function logon(xml,bNavn) {
   var xmlDoc = xml.responseXML;
-  var x = xmlDoc.getElementsByTagName("login");
-  var status =x[0].getElementsByTagName("status")[0].childNodes[0].nodeValue;
-  console.log(status);
-
+  var x = xmlDoc.getElementsByTagName("response");
+  var status = x[0].getElementsByTagName("status")[0].childNodes[0].nodeValue;
+  var statusMessage = x[0].getElementsByTagName("message")[0].childNodes[0].nodeValue;
   if (status == "true"){
     document.getElementById("overskrift").innerHTML = "Velkommen " + bNavn ;
+    document.getElementById("loginstatus").innerHTML = x[0].getElementsByTagName("message")[0].childNodes[0].nodeValue;
   }
   
   else{
-    console.log(x[0].getElementsByTagName("message")[0].childNodes[0].nodeValue);
     document.getElementById("loginstatus").innerHTML = x[0].getElementsByTagName("message")[0].childNodes[0].nodeValue;
-    setTimeout(functionToDisappearInnerHTML, 5000); //Sets a timer that clears
+    setTimeout(clearLoginStatus, 5000); //Sets a timer that clears the message
   }
 
 }
@@ -415,12 +422,20 @@ function logout(){
   
   xhttp.open("GET", "http://bp:8888/logout/", true);
   xhttp.setRequestHeader('Content-type', 'text/xml');
-  xhttp.withCredentials = true; //må sendes for at kake skal kunne lagres!!!!!
+  xhttp.withCredentials = true; // in order to pass cookies
   xhttp.send(null);
 }
 
-function functionToDisappearInnerHTML() {
-    document.getElementById("loginstatus").innerHTML = ""; //Clears the innerHTML
+function clearLoginStatus() {
+  document.getElementById("loginstatus").innerHTML = ""; //Clears the innerHTML
+}
+
+function clearResponseAuthor(){
+  document.getElementById("responseAuthor").innerHTML = ""; //Clears the innerHTML
+}
+
+function clearResponseBook(){
+  document.getElementById("responseBook").innerHTML = ""; //Clears the innerHTML
 }
 
 
