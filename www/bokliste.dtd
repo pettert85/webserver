@@ -1,0 +1,6 @@
+<!ELEMENT bokliste(bok)>
+<!ELEMENT bok (bokid,tittel,forfatterid)>
+<!ELEMENT bokid (#PCDATA)>
+<!ELEMENT tittel (#PCDATA)>
+<!ELEMENT forfatterid (#PCDATA)>
+

@@ -1,0 +1,4 @@
+<!ELEMENT response (status,message)>
+<!ELEMENT status (#PCDATA)>
+<!ELEMENT message (#PCDATA)>
+

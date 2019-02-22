@@ -1,3 +1,0 @@
-<!ELEMENT logout (sessionID)>
-<!ELEMENT sessionID (#PCDATA)>
-
