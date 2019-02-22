@@ -34,13 +34,13 @@
 	<tr>
 		<td>
 			Hent forfatter med spesifikk ID, eller tom for alle: 
-      <form name="getAuthor" onsubmit="author(forfatterID); this.reset(); return false;">
+      <form name="getAuthor" onsubmit="author(forfatterID.value); this.reset(); return false;">
 			<input type="text" placeholder="ID" name="forfatterID">
       <input type="submit" value="Hent">
     			</form></td>
 		<td>
 			Hent en bok med spesifikk id eller tom for alle:
-      <form onsubmit="book(bokID); this.reset(); return false;">
+      <form onsubmit="book(bokID.value); this.reset(); return false;">
 			<input type="text" placeholder="ID" name="bokID">
 			<input type="submit" value="Hent">
 			</form></td></tr>
@@ -83,9 +83,10 @@ function author(forfatterID) {
   xhttp.onreadystatechange = function() {
     if (this.readyState == 4 && this.status == 200) {
       authorTable(this);
+      console.log("forfatterID: " + forfatterID);
     }
   };
-  xhttp.open("GET", "http://bp:8888/forfatter/" + forfatterID.value, true);
+  xhttp.open("GET", "http://bp:8888/forfatter/" + forfatterID, true);
   xhttp.send();
 }
 
@@ -123,7 +124,10 @@ function postAuthor(fId, fNavn, eNavn, nasjonalitet){
   
   xhttp.onreadystatechange = function() {
     if (this.readyState == 4 && this.status == 200) {
-      postAuthTable(this);
+      document.getElementById("responseAuthor").innerHTML = responseHandler(this);
+      author("");
+      setTimeout(clearResponseAuthor, 3000);
+
     }
   };
   
@@ -131,16 +135,6 @@ function postAuthor(fId, fNavn, eNavn, nasjonalitet){
   xhttp.setRequestHeader('Content-type', 'text/xml');
   xhttp.withCredentials = true;
   xhttp.send(sendXml);	
-}
-
-function postAuthTable(resp){
-  var xmlDoc = resp.responseXML;
-  var x = xmlDoc.getElementsByTagName("response");
-  var status = x[0].getElementsByTagName("status")[0].childNodes[0].nodeValue;
-  var statusMessage = x[0].getElementsByTagName("message")[0].childNodes[0].nodeValue;
- 
-  document.getElementById("responseAuthor").innerHTML = statusMessage;
-  setTimeout(clearResponseAuthor, 3000);
 }
 </script>
 
@@ -157,7 +151,9 @@ function putAuthor(fId, fNavn, eNavn, nasjonalitet){
   
   xhttp.onreadystatechange = function() {
     if (this.readyState == 4 && this.status == 200) {
-      putAuthTable(this);
+      document.getElementById("responseAuthor").innerHTML = responseHandler(this);
+      author("");
+      setTimeout(clearResponseAuthor, 3000);
     }
  };
  
@@ -165,17 +161,6 @@ function putAuthor(fId, fNavn, eNavn, nasjonalitet){
  xhttp.setRequestHeader('Content-type', 'text/xml');
  xhttp.withCredentials = true;
  xhttp.send(sendXml);	
-}
-
-function putAuthTable(resp){
-  var xmlDoc = resp.responseXML;
-  var x = xmlDoc.getElementsByTagName("response");
-  //var status = x[0].getElementsByTagName("status")[0].childNodes[0].nodeValue;
-  var statusMessage = x[0].getElementsByTagName("message")[0].childNodes[0].nodeValue;
- 
-  document.getElementById("responseAuthor").innerHTML = statusMessage;
-  setTimeout(clearResponseAuthor, 3000);
- 
 }
 </script>
 
@@ -192,22 +177,15 @@ function deleteOneAuthor(fId, fNavn, eNavn, nasjonalitet){
  var xhttp = new XMLHttpRequest();
  xhttp.onreadystatechange = function() {
     if (this.readyState == 4 && this.status == 200) {
-      deleteOneAuthTable(this);
+      document.getElementById("responseAuthor").innerHTML = responseHandler(this);
+      author("");
+      setTimeout(clearResponseAuthor, 3000);
     }
  };
  xhttp.open("DELETE", "http://bp:8888/forfatter/" + fId, true);
  xhttp.setRequestHeader('Content-type', 'text/xml');
  xhttp.withCredentials = true;
  xhttp.send(sendXml);	
-}
-function deleteOneAuthTable(resp){
-  var xmlDoc = resp.responseXML;
-  var x = xmlDoc.getElementsByTagName("response");
-  //var status = x[0].getElementsByTagName("status")[0].childNodes[0].nodeValue;
-  var statusMessage = x[0].getElementsByTagName("message")[0].childNodes[0].nodeValue;
-  
-  document.getElementById("responseAuthor").innerHTML = statusMessage;
-  setTimeout(clearResponseAuthor, 3000);
 }
 </script>
 
@@ -217,24 +195,18 @@ function deleteAllAuthors(){
  var xhttp = new XMLHttpRequest();
  xhttp.onreadystatechange = function() {
     if (this.readyState == 4 && this.status == 200) {
-      deleteAllAuthTable(this);
+      document.getElementById("responseAuthor").innerHTML = responseHandler(this);
+      author("");
+      setTimeout(clearResponseAuthor, 3000);
     }
  };
+
  xhttp.open("DELETE", "http://bp:8888/forfatter", true);
  xhttp.setRequestHeader('Content-type', 'text/xml');
  xhttp.withCredentials = true;
  xhttp.send();	
 }
 
-function deleteAllAuthTable(resp){
-  var xmlDoc = resp.responseXML;
-  var x = xmlDoc.getElementsByTagName("response");
-  //var status = x[0].getElementsByTagName("status")[0].childNodes[0].nodeValue;
-  var statusMessage = x[0].getElementsByTagName("message")[0].childNodes[0].nodeValue;
-  
-  document.getElementById("responseAuthor").innerHTML = statusMessage;
-  setTimeout(clearResponseAuthor, 3000);
-} 
 </script>
 
 <!-- En eller alle boker -->
@@ -246,7 +218,7 @@ function book(bokID) {
       bookTable(this);
     }
   };
-  xhttp.open("GET", "http://bp:8888/bok/" + bokID.value, true);
+  xhttp.open("GET", "http://bp:8888/bok/" + bokID, true);
   xhttp.send();
 }
 function bookTable(xml) {
@@ -278,23 +250,15 @@ function postBook(bId, tittel, fId){
  var xhttp = new XMLHttpRequest();
  xhttp.onreadystatechange = function() {
     if (this.readyState == 4 && this.status == 200) {
-      postBookTable(this);
+      document.getElementById("responseBook").innerHTML = responseHandler(this);
+      book("");
+      setTimeout(clearResponseBook, 3000);
     }
  };
  xhttp.open("POST", "http://bp:8888/bok/" + bId, true);
  xhttp.setRequestHeader('Content-type', 'text/xml');
  xhttp.withCredentials = true;
  xhttp.send(sendXml);	
-}
-function postBookTable(resp){
-  var xmlDoc = resp.responseXML;
-  var x = xmlDoc.getElementsByTagName("response");
-  var status = x[0].getElementsByTagName("status")[0].childNodes[0].nodeValue;
-  var statusMessage = x[0].getElementsByTagName("message")[0].childNodes[0].nodeValue;
-  
-  
-  document.getElementById("responseBook").innerHTML = statusMessage;
-  setTimeout(clearResponseBook, 3000);
 }
 </script>
 
@@ -309,22 +273,15 @@ function putBook(bId, tittel, fId){
  var xhttp = new XMLHttpRequest();
  xhttp.onreadystatechange = function() {
     if (this.readyState == 4 && this.status == 200) {
-      putBookTable(this);
+      document.getElementById("responseBook").innerHTML = responseHandler(this);
+      book("");
+      setTimeout(clearResponseBook, 3000);
     }
  };
  xhttp.open("PUT", "http://bp:8888/bok/" + bId, true);
  xhttp.setRequestHeader('Content-type', 'text/xml');
  xhttp.withCredentials = true;
  xhttp.send(sendXml);	
-}
-function putBookTable(resp){
-  var xmlDoc = resp.responseXML;
-  var x = xmlDoc.getElementsByTagName("response");
-  var status = x[0].getElementsByTagName("status")[0].childNodes[0].nodeValue;
-  var statusMessage = x[0].getElementsByTagName("message")[0].childNodes[0].nodeValue;
-  
-  document.getElementById("responseBook").innerHTML = statusMessage;
-  setTimeout(clearResponseBook, 3000);
 }
 </script>
 
@@ -339,23 +296,15 @@ function deleteOneBook(bId, tittel, fId){
  var xhttp = new XMLHttpRequest();
  xhttp.onreadystatechange = function() {
     if (this.readyState == 4 && this.status == 200) {
-      deleteOneBookTable(this);
+      document.getElementById("responseBook").innerHTML = responseHandler(this);
+      book("");
+      setTimeout(clearResponseBook, 3000);
     }
  };
  xhttp.open("DELETE", "http://bp:8888/bok/" + bId, true);
  xhttp.setRequestHeader('Content-type', 'text/xml');
  xhttp.withCredentials = true;
  xhttp.send(sendXml);	
-}
-function deleteOneBookTable(resp){
-  var xmlDoc = resp.responseXML;
-  var x = xmlDoc.getElementsByTagName("response");
-  var status = x[0].getElementsByTagName("status")[0].childNodes[0].nodeValue;
-  var statusMessage = x[0].getElementsByTagName("message")[0].childNodes[0].nodeValue;
-  
-
-  document.getElementById("responseBook").innerHTML = statusMessage;
-  setTimeout(clearResponseBook, 3000);
 }
 </script>
 
@@ -365,22 +314,15 @@ function deleteAllBooks(){
  var xhttp = new XMLHttpRequest();
  xhttp.onreadystatechange = function() {
     if (this.readyState == 4 && this.status == 200) {
-      deleteAllBookTable(this);
+      document.getElementById("responseBook").innerHTML = responseHandler(this);
+      book("");
+      setTimeout(clearResponseBook, 3000);
     }
  };
  xhttp.open("DELETE", "http://bp:8888/bok", true);
  xhttp.setRequestHeader('Content-type', 'text/xml');
  xhttp.withCredentials = true;
  xhttp.send();	
-}
-function deleteAllBookTable(resp){
-  var xmlDoc = resp.responseXML;
-  var x = xmlDoc.getElementsByTagName("response");
-  var status = x[0].getElementsByTagName("status")[0].childNodes[0].nodeValue;
-  var statusMessage = x[0].getElementsByTagName("message")[0].childNodes[0].nodeValue;
-  
-  document.getElementById("responseBook").innerHTML = statusMessage;
-  setTimeout(clearResponseBook, 3000);
 }
 </script>
 
@@ -416,6 +358,7 @@ function logon(xml,bNavn) {
   if (status == "true"){
     document.getElementById("overskrift").innerHTML = "Velkommen " + bNavn ;
     document.getElementById("loginstatus").innerHTML = x[0].getElementsByTagName("message")[0].childNodes[0].nodeValue;
+    setTimeout(clearLoginStatus, 5000); //Sets a timer that clears the message
   }
   
   else{
@@ -426,7 +369,7 @@ function logon(xml,bNavn) {
 }
 
 function logout(){
- var xhttp = new XMLHttpRequest();
+  var xhttp = new XMLHttpRequest();
 
   xhttp.onreadystatechange = function() {
     if (this.readyState == 4 && this.status == 200) {
@@ -450,6 +393,15 @@ function clearResponseAuthor(){
 
 function clearResponseBook(){
   document.getElementById("responseBook").innerHTML = ""; //Clears the innerHTML
+}
+
+function responseHandler(resp){
+  var xmlDoc = resp.responseXML;
+  var x = xmlDoc.getElementsByTagName("response");
+  //var status = x[0].getElementsByTagName("status")[0].childNodes[0].nodeValue;
+  var statusMessage = x[0].getElementsByTagName("message")[0].childNodes[0].nodeValue;
+
+  return statusMessage;
 }
 
 
