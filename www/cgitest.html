@@ -1,28 +1,31 @@
 <html>
 
-<head><title>CGI test</title>
+<head><title>CGI test av POST & GET</title>
 <link rel="stylesheet" type="text/css" href="/styles.css">
 </head>
 <body bgcolor="556B2F">
 <center>
-<h1>CGI POST and GET test!</h1>
+<h1>Enkel CGI Test av POST & GET</h1>
 
 <table id="para" cellspacing="20">
 	<tr>
 		<td>
 			POST: <form action="http://bp:8080/cgi-bin/hallo_2.cgi" method="post">
-			<input type="text" name="navn">
+			<input type="text" name="fornavn">
 			<input type="submit">
 			</form>
 		</td>
 
 		<td>
-			GET: <form action="http://bp:8080/cgi-bin/hallo_2.cgi" method="get">
-			<input type="text" name="navn">
-			<input type="submit">
+			GET Author: <form action="http://bp:8080/cgi-bin/hallo_2.cgi" method="get">
+			<input type="text" placeholder="Fornavn" name="fornavn">
+			<input type="text" placeholder="Etternavn" name="etternavn">
+			<input type="submit" value="s&oslash;k">
 		</form>
 		</td>
 	</tr>
-</table>	
+</table>
+
+Trykk <a href="http://bp:8080/cgi-bin/database.cgi">her</a> for &aring; teste databasen (cgi + node + express)
 </center>
 </body></html>
